@@ -724,6 +724,18 @@ async def refresh_snipe_times():
                         active_snipes[snipe.id].end_time = end
                     updated += 1
                     logger.info(f"Snipe {snipe.id}: updated end_time to {end.isoformat()}")
+
+                    # Also grab thumbnail if missing
+                    if not snipe.thumbnail_url:
+                        thumb_url = await page.evaluate("""() => {
+                            const el = document.querySelector("[style*='background-image'][style*='cdn.hibid.com']");
+                            if (!el) return null;
+                            const m = el.style.backgroundImage.match(/url\\("?([^"\\)]+)"?\\)/);
+                            return m ? m[1] : null;
+                        }""")
+                        if thumb_url:
+                            snipe.thumbnail_url = thumb_url
+                            logger.info(f"Snipe {snipe.id}: updated thumbnail")
                 except Exception as e:
                     logger.warning(f"Snipe {snipe.id}: failed to refresh time: {e}")
             session.commit()

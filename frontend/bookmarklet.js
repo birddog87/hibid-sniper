@@ -35,8 +35,10 @@
   const nextBid = btnMatch ? parseFloat(btnMatch[1].replace(',', '')) : 0;
   const increment = nextBid > currentBid ? nextBid - currentBid : 5;
 
-  const img = document.querySelector('.lot-photos img, .lot-image img, img[class*="lot"]');
-  const thumb = img ? img.src : '';
+  // HiBid uses background-image on divs, not <img> tags
+  const thumbEl = document.querySelector("[style*='background-image'][style*='cdn.hibid.com']");
+  const thumbMatch = thumbEl ? thumbEl.style.backgroundImage.match(/url\("?([^")\s]+)"?\)/) : null;
+  const thumb = thumbMatch ? thumbMatch[1] : '';
 
   const pathParts = window.location.pathname.split('/');
   const lotIdx = pathParts.indexOf('lot');

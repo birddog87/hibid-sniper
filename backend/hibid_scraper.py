@@ -145,9 +145,13 @@ async def scrape_lot(url: str) -> LotDetails:
     # Time: ".lot-time-left" -> "Time Remaining: 54m 43s - Friday 04:00 PM"
     time_text = await _safe_text(page, ".lot-time-left") or ""
 
-    # Thumbnail
-    thumb = await page.query_selector(".lot-image img, .gallery img, img[class*='lot']")
-    thumbnail_url = await thumb.get_attribute("src") if thumb else None
+    # Thumbnail — HiBid uses background-image on divs, not <img> tags
+    thumbnail_url = await page.evaluate("""() => {
+        const el = document.querySelector("[style*='background-image'][style*='cdn.hibid.com']");
+        if (!el) return null;
+        const m = el.style.backgroundImage.match(/url\\("?([^"\\)]+)"?\\)/);
+        return m ? m[1] : null;
+    }""") or None
 
     # Auction house name (from page header/branding)
     house_text = await _safe_text(page, "[class*='auctioneer'], [class*='auction-house'], .company-name") or ""

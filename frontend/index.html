@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HiBid Sniper</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f1a;
+  --bg-card:#1a1a2e;
+  --bg-card-alt:#16213e;
+  --bg-input:#0a0a15;
+  --border:#2a2a4a;
+  --text:#e0e0e0;
+  --text-dim:#8888aa;
+  --accent:#6c63ff;
+  --accent-hover:#7b73ff;
+  --green:#00c853;
+  --yellow:#ffd600;
+  --red:#ff1744;
+  --orange:#ff9100;
+  --blue:#448aff;
+  --radius:8px;
+  --shadow:0 2px 12px rgba(0,0,0,0.4);
+}
+html{font-size:15px}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Header */
+.header{
+  background:var(--bg-card);border-bottom:1px solid var(--border);
+  padding:1rem 1.5rem;display:flex;align-items:center;gap:0.75rem;
+}
+.header h1{font-size:1.25rem;font-weight:700;letter-spacing:-0.02em}
+.header .subtitle{color:var(--text-dim);font-size:0.8rem}
+
+/* Tabs */
+.tabs{
+  display:flex;background:var(--bg-card);border-bottom:2px solid var(--border);
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+}
+.tab-btn{
+  flex:1;min-width:0;padding:0.85rem 1rem;text-align:center;
+  background:none;border:none;color:var(--text-dim);cursor:pointer;
+  font-size:0.85rem;font-weight:500;white-space:nowrap;
+  border-bottom:2px solid transparent;transition:all 0.2s;
+}
+.tab-btn:hover{color:var(--text);background:rgba(108,99,255,0.05)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(108,99,255,0.08)}
+
+/* Content */
+.content{max-width:960px;margin:0 auto;padding:1rem}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Cards */
+.card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;
+  box-shadow:var(--shadow);
+}
+.card h2{font-size:1rem;margin-bottom:1rem;color:var(--text);font-weight:600}
+
+/* Forms */
+.form-row{display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.75rem}
+.form-group{display:flex;flex-direction:column;gap:0.3rem;flex:1;min-width:140px}
+.form-group label{font-size:0.75rem;color:var(--text-dim);font-weight:500;text-transform:uppercase;letter-spacing:0.04em}
+input,select{
+  background:var(--bg-input);color:var(--text);border:1px solid var(--border);
+  border-radius:6px;padding:0.6rem 0.75rem;font-size:0.9rem;
+  transition:border-color 0.2s;width:100%;
+}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+input::placeholder{color:var(--text-dim)}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;
+  padding:0.6rem 1.25rem;border:none;border-radius:6px;cursor:pointer;
+  font-size:0.85rem;font-weight:600;transition:all 0.15s;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.btn-danger{background:var(--red);color:#fff;padding:0.35rem 0.75rem;font-size:0.78rem}
+.btn-danger:hover{filter:brightness(1.15)}
+.btn-sm{padding:0.35rem 0.75rem;font-size:0.78rem}
+
+/* Badges */
+.badge{
+  display:inline-block;padding:0.2rem 0.6rem;border-radius:99px;
+  font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;
+}
+.badge-good{background:rgba(0,200,83,0.15);color:var(--green)}
+
+/* Setup tab styles */
+.bookmarklet-link{
+  display:inline-block;padding:0.6rem 1.25rem;border-radius:6px;
+  background:var(--accent);color:#fff;font-weight:600;font-size:0.85rem;
+  cursor:grab;text-decoration:none;
+}
+.bookmarklet-link:hover{background:var(--accent-hover);text-decoration:none}
+.setup-step{margin-bottom:1rem;padding:0.75rem;background:var(--bg-card-alt);border-radius:6px;border-left:3px solid var(--accent)}
+.setup-step .step-num{font-weight:700;color:var(--accent);margin-right:0.5rem}
+.cookie-textarea{
+  width:100%;min-height:100px;background:var(--bg-input);color:var(--text);
+  border:1px solid var(--border);border-radius:6px;padding:0.6rem;
+  font-family:monospace;font-size:0.8rem;resize:vertical;
+}
+.cookie-status{display:inline-block;padding:0.3rem 0.75rem;border-radius:99px;font-size:0.78rem;font-weight:600}
+.cookie-ok{background:rgba(0,200,83,0.15);color:var(--green)}
+.cookie-missing{background:rgba(255,23,68,0.15);color:var(--red)}
+.badge-fair{background:rgba(255,214,0,0.15);color:var(--yellow)}
+.badge-overpriced{background:rgba(255,23,68,0.15);color:var(--red)}
+.badge-unknown{background:rgba(136,136,170,0.15);color:var(--text-dim)}
+.badge-watching{background:rgba(68,138,255,0.15);color:var(--blue)}
+.badge-bidding{background:rgba(255,214,0,0.15);color:var(--yellow)}
+.badge-won{background:rgba(0,200,83,0.15);color:var(--green)}
+.badge-lost{background:rgba(255,23,68,0.15);color:var(--red)}
+.badge-capped_out{background:rgba(255,145,0,0.15);color:var(--orange)}
+.badge-scheduled{background:rgba(108,99,255,0.15);color:var(--accent)}
+.badge-cancelled{background:rgba(136,136,170,0.15);color:var(--text-dim)}
+
+/* Results panel */
+.results-panel{margin-top:1rem}
+.cost-breakdown{display:grid;grid-template-columns:1fr auto;gap:0.25rem 1rem;font-size:0.9rem}
+.cost-breakdown .label{color:var(--text-dim)}
+.cost-breakdown .value{text-align:right;font-variant-numeric:tabular-nums}
+.cost-breakdown .total-label{font-weight:700;color:var(--text);font-size:1.05rem;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.35rem}
+.cost-breakdown .total-value{font-weight:700;color:var(--accent);font-size:1.05rem;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.35rem;text-align:right}
+.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin:0.75rem 0}
+.price-cell{text-align:center;padding:0.5rem;background:var(--bg);border-radius:6px}
+.price-cell .cell-label{font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;margin-bottom:0.2rem}
+.price-cell .cell-value{font-size:1rem;font-weight:600;font-variant-numeric:tabular-nums}
+.section-title{font-size:0.8rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;margin:1rem 0 0.5rem}
+.links-row{display:flex;gap:1rem;margin:0.5rem 0}
+.verdict-box{text-align:center;margin-top:1rem;padding:1rem;background:var(--bg);border-radius:var(--radius)}
+.verdict-box .verdict-text{font-size:1.3rem;font-weight:700}
+
+/* Tables */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:0.85rem}
+th{text-align:left;padding:0.6rem 0.75rem;color:var(--text-dim);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border)}
+td{padding:0.6rem 0.75rem;border-bottom:1px solid rgba(42,42,74,0.5);vertical-align:middle}
+tr:hover td{background:rgba(108,99,255,0.03)}
+
+/* Snipe row thumbnail */
+.snipe-thumb{width:48px;height:48px;object-fit:cover;border-radius:4px;background:var(--bg)}
+
+/* Loading */
+.spinner{
+  display:inline-block;width:18px;height:18px;border:2px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay{
+  display:flex;align-items:center;justify-content:center;gap:0.5rem;
+  padding:2rem;color:var(--text-dim);font-size:0.9rem;
+}
+
+/* Houses list */
+.house-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0.75rem;background:var(--bg);border-radius:6px;margin-bottom:0.5rem;
+}
+.house-info{display:flex;flex-direction:column;gap:0.15rem}
+.house-name{font-weight:600;font-size:0.9rem}
+.house-premium{font-size:0.8rem;color:var(--text-dim)}
+
+/* Listing drill-down */
+.listing-list{margin:0.5rem 0 1rem;display:flex;flex-direction:column;gap:0.35rem}
+.listing-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0.5rem 0.75rem;background:var(--bg);border-radius:6px;
+  font-size:0.82rem;gap:0.75rem;transition:background 0.15s;
+}
+.listing-item:hover{background:rgba(108,99,255,0.08)}
+.listing-title{
+  flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:var(--accent);
+}
+.listing-title a{color:inherit}
+.listing-price{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.listing-toggle{
+  background:none;border:1px solid var(--border);color:var(--text-dim);
+  border-radius:4px;padding:0.25rem 0.6rem;font-size:0.72rem;cursor:pointer;
+  transition:all 0.15s;
+}
+.listing-toggle:hover{border-color:var(--accent);color:var(--text)}
+.listing-note{font-size:0.72rem;color:var(--text-dim);margin:-0.25rem 0 0.5rem;font-style:italic}
+
+/* Empty state */
+.empty{text-align:center;padding:2rem;color:var(--text-dim);font-size:0.9rem}
+
+/* Budget bar */
+.budget-bar-wrap{
+  background:var(--bg-card);border-bottom:1px solid var(--border);
+  padding:0.6rem 1.5rem;display:flex;align-items:center;gap:1rem;
+}
+.budget-label{font-size:0.78rem;color:var(--text-dim);white-space:nowrap}
+.budget-track{
+  flex:1;height:8px;background:var(--bg-input);
+  border-radius:99px;overflow:hidden;min-width:80px;
+}
+.budget-fill{height:100%;border-radius:99px;transition:width 0.4s,background 0.4s}
+.budget-fill.green{background:var(--green)}
+.budget-fill.yellow{background:var(--yellow)}
+.budget-fill.red{background:var(--red)}
+.budget-text{font-size:0.82rem;font-weight:600;white-space:nowrap}
+.btn-kill{
+  background:var(--red);color:#fff;font-weight:700;
+  padding:0.4rem 1rem;font-size:0.82rem;border:none;
+  border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;
+}
+.btn-kill:hover{filter:brightness(1.2)}
+
+/* Activity log */
+.log-placed{color:var(--green);font-weight:600}
+.log-budget_blocked{color:var(--red);font-weight:600}
+.log-cap_blocked{color:var(--orange);font-weight:600}
+.log-error{color:var(--text-dim)}
+
+/* Money format */
+.money::before{content:'$'}
+
+/* Responsive */
+@media(max-width:600px){
+  .form-row{flex-direction:column}
+  .form-group{min-width:100%}
+  .price-grid{grid-template-columns:1fr}
+  .tabs{gap:0}
+  .tab-btn{padding:0.7rem 0.5rem;font-size:0.78rem}
+  html{font-size:14px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>HiBid Sniper</h1>
+  <span class="subtitle">Deal analyzer &amp; auction sniper</span>
+</div>
+
+<div class="budget-bar-wrap" id="budget-bar">
+  <span class="budget-label">Spent:</span>
+  <div class="budget-track"><div class="budget-fill" id="budget-fill" style="width:0%"></div></div>
+  <span class="budget-text" id="budget-text">Loading...</span>
+  <button class="btn-kill" onclick="killAllSnipes()">STOP ALL SNIPES</button>
+</div>
+<div class="budget-bar-wrap" style="padding-top:0;border-bottom:1px solid var(--border)">
+  <span class="budget-label">If you win:</span>
+  <div class="budget-track"><div class="budget-fill" id="exposure-fill" style="width:0%"></div></div>
+  <span class="budget-text" id="exposure-text">—</span>
+</div>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="analyzer">Deal Analyzer</button>
+  <button class="tab-btn" data-tab="snipes">Snipe Queue</button>
+  <button class="tab-btn" data-tab="houses">Auction Houses</button>
+  <button class="tab-btn" data-tab="history">History</button>
+  <button class="tab-btn" data-tab="setup">Setup</button>
+  <button class="tab-btn" data-tab="activity">Activity Log</button>
+</nav>
+
+<div class="content">
+
+  <!-- TAB 1: Deal Analyzer -->
+  <div id="tab-analyzer" class="tab-panel active">
+    <div class="card">
+      <h2>Analyze a Deal</h2>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>Item Name</label>
+          <input type="text" id="deal-item" placeholder="e.g. Milwaukee M18 Impact Driver">
+        </div>
+        <div class="form-group">
+          <label>Your Bid ($)</label>
+          <input type="number" id="deal-bid" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Auction House</label>
+          <select id="deal-house"><option value="">Loading...</option></select>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="btn-analyze" onclick="analyzeDeal()">Analyze Deal</button>
+    </div>
+
+    <div id="deal-results" class="results-panel" style="display:none">
+      <div class="card">
+        <h2>True Cost Breakdown</h2>
+        <div id="cost-breakdown" class="cost-breakdown"></div>
+      </div>
+      <div class="card">
+        <h2>Compare Prices</h2>
+        <div id="ebay-prices-section" style="display:none">
+          <div id="ebay-sold-section">
+            <div class="section-title">eBay Sold Prices</div>
+            <div id="ebay-sold" class="price-grid"></div>
+            <div id="ebay-sold-listings"></div>
+          </div>
+          <div id="ebay-active-section">
+            <div class="section-title" id="ebay-active-label">eBay Active Listings</div>
+            <div id="ebay-active" class="price-grid"></div>
+            <div id="ebay-active-listings"></div>
+          </div>
+        </div>
+        <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:0.75rem" id="search-hint">Click to check prices on each platform:</p>
+        <div class="links-row" id="search-links" style="flex-wrap:wrap;gap:0.5rem"></div>
+      </div>
+      <div class="card">
+        <div id="verdict-box" class="verdict-box"></div>
+      </div>
+    </div>
+    <div id="deal-loading" class="loading-overlay" style="display:none">
+      <div class="spinner"></div> Calculating true cost &amp; fetching eBay prices...
+    </div>
+  </div>
+
+  <!-- TAB 2: Snipe Queue -->
+  <div id="tab-snipes" class="tab-panel">
+    <div class="card">
+      <h2>Queue a Snipe</h2>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>HiBid Lot URL</label>
+          <input type="text" id="snipe-url" placeholder="https://hibid.com/lot/...">
+        </div>
+        <div class="form-group">
+          <label>Max Cap ($)</label>
+          <input type="number" id="snipe-cap" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Auction House</label>
+          <select id="snipe-house"><option value="">Loading...</option></select>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="btn-snipe" onclick="queueSnipe()">Queue Snipe</button>
+    </div>
+    <div class="card">
+      <h2>Active Snipes</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>Title</th>
+              <th>Current Bid</th>
+              <th>Max Cap</th>
+              <th>Ends In</th>
+              <th>Status</th>
+              <th>Bid Now</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="snipes-tbody">
+            <tr><td colspan="8" class="empty">No active snipes</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: Auction Houses -->
+  <div id="tab-houses" class="tab-panel">
+    <div class="card">
+      <h2>Add Auction House</h2>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>Name</label>
+          <input type="text" id="house-name" placeholder="e.g. Walters Auctions">
+        </div>
+        <div class="form-group">
+          <label>Buyer's Premium %</label>
+          <input type="number" id="house-premium" placeholder="18" min="0" step="0.1">
+        </div>
+        <div class="form-group">
+          <label>Per-Item Fee ($)</label>
+          <input type="number" id="house-item-fee" placeholder="0" min="0" step="0.25">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>Address <span style="color:var(--text-dim);font-size:0.75rem">(optional — auto-calculates distance)</span></label>
+          <input type="text" id="house-address" placeholder="e.g. 2040 Appleby Line, Burlington, ON">
+        </div>
+        <div class="form-group">
+          <label>Distance (km)</label>
+          <input type="number" id="house-distance" placeholder="auto" min="0" step="0.1">
+        </div>
+        <div class="form-group">
+          <label>Drive Time (min)</label>
+          <input type="number" id="house-drive-time" placeholder="auto" min="0" step="1">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addHouse()">Add House</button>
+    </div>
+    <div class="card">
+      <h2>Saved Houses</h2>
+      <div id="houses-list"><div class="empty">No auction houses yet</div></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: History -->
+  <div id="tab-history" class="tab-panel">
+    <div class="card">
+      <h2>Deal Checks</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Bid</th>
+              <th>True Cost</th>
+              <th>eBay Avg</th>
+              <th>Verdict</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="history-deals">
+            <tr><td colspan="6" class="empty">No deal checks yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Past Snipes</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Max Cap</th>
+              <th>Final Bid</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="history-snipes">
+            <tr><td colspan="5" class="empty">No past snipes yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6: Activity Log -->
+  <div id="tab-activity" class="tab-panel">
+    <div class="card">
+      <h2>Bid Activity</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Lot</th>
+              <th>Amount</th>
+              <th>Result</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody id="activity-tbody">
+            <tr><td colspan="5" class="empty">No bid activity yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: Setup -->
+  <div id="tab-setup" class="tab-panel">
+    <div class="card" style="border-left:3px solid var(--red)">
+      <h2>Safety Budget</h2>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:0.75rem">
+        Set a hard limit on total spending. The bot will refuse to bid once this is reached.
+        Default is $0 which means sniping is disabled until you set a budget.
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Global Spend Cap ($)</label>
+          <input type="number" id="settings-global-cap" placeholder="e.g. 500" min="0" step="1">
+        </div>
+        <div class="form-group">
+          <label>Max Single Snipe Cap ($)</label>
+          <input type="number" id="settings-single-cap" placeholder="e.g. 200" min="0" step="1">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+      <span id="settings-saved" style="color:var(--green);margin-left:0.75rem;display:none">Saved!</span>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--blue)">
+      <h2>Driving Costs</h2>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:0.75rem">
+        Used to calculate round-trip gas cost for each auction house. Shown as FYI — not added to true cost.
+      </p>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label>Home Address</label>
+          <input type="text" id="settings-home-address" placeholder="e.g. 123 Main St, Burlington, ON">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Gas Price ($/L)</label>
+          <input type="number" id="settings-gas-price" placeholder="1.80" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Fuel Consumption (L/100km)</label>
+          <input type="number" id="settings-fuel" placeholder="11.6" min="0" step="0.1">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+    </div>
+
+    <div class="card">
+      <h2>Bookmarklet - Send Lots to Sniper</h2>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:1rem">
+        Drag this button to your bookmarks bar. When you're on a HiBid lot page, click it to send the lot data straight to your sniper.
+      </p>
+      <div style="margin-bottom:1.25rem;text-align:center">
+        <a class="bookmarklet-link" id="bookmarklet-drag" href="#">Snipe This Lot</a>
+      </div>
+      <div class="setup-step">
+        <span class="step-num">1.</span> Drag the purple button above to your browser bookmarks bar
+      </div>
+      <div class="setup-step">
+        <span class="step-num">2.</span> Go to any HiBid lot page you're interested in
+      </div>
+      <div class="setup-step">
+        <span class="step-num">3.</span> Click "Snipe This Lot" in your bookmarks bar
+      </div>
+      <div class="setup-step">
+        <span class="step-num">4.</span> Pick your auction house, enter your max cap, hit <strong>Analyze &amp; Queue Snipe</strong>
+      </div>
+      <div class="setup-step">
+        <span class="step-num">5.</span> Get instant results: true cost breakdown, eBay prices, verdict, and the snipe is queued automatically
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>HiBid Cookie Import</h2>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:0.75rem">
+        The snipe bot needs your HiBid login session to place bids. Since HiBid uses CAPTCHA, you need to import cookies from your browser.
+      </p>
+      <div style="margin-bottom:0.75rem">
+        Cookie status: <span id="cookie-status-badge" class="cookie-status cookie-missing">Not loaded</span>
+      </div>
+      <div class="setup-step">
+        <span class="step-num">1.</span> Install the <a href="https://chromewebstore.google.com/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm" target="_blank" rel="noopener">Cookie Editor</a> Chrome extension
+      </div>
+      <div class="setup-step">
+        <span class="step-num">2.</span> Go to <a href="https://www.hibid.com" target="_blank" rel="noopener">hibid.com</a> and log in normally
+      </div>
+      <div class="setup-step">
+        <span class="step-num">3.</span> Click the Cookie Editor icon, click "Export" (copies JSON to clipboard)
+      </div>
+      <div class="setup-step">
+        <span class="step-num">4.</span> Paste the JSON below and click Import
+      </div>
+      <textarea class="cookie-textarea" id="cookie-json" placeholder='Paste exported cookie JSON here...'></textarea>
+      <div style="margin-top:0.75rem">
+        <button class="btn btn-primary" onclick="importCookies()">Import Cookies</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── Helpers ── */
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+const money = (v) => v != null ? '$' + Number(v).toFixed(2) : 'N/A';
+
+function verdictBadge(v) {
+  const map = {
+    good_deal: ['Good Deal', 'badge-good'],
+    fair: ['Fair', 'badge-fair'],
+    overpriced: ['Overpriced', 'badge-overpriced'],
+    unknown: ['Unknown', 'badge-unknown'],
+  };
+  const [label, cls] = map[v] || ['Unknown', 'badge-unknown'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function statusBadge(s) {
+  const map = {
+    scheduled: ['Scheduled', 'badge-scheduled'],
+    watching: ['Watching', 'badge-watching'],
+    bidding: ['Bidding', 'badge-bidding'],
+    won: ['Won', 'badge-won'],
+    lost: ['Lost', 'badge-lost'],
+    capped_out: ['Capped Out', 'badge-capped_out'],
+    cancelled: ['Cancelled', 'badge-cancelled'],
+  };
+  const [label, cls] = map[s] || [s, 'badge-unknown'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function timeUntil(isoStr) {
+  if (!isoStr || isoStr === 'None') return '';
+  const end = new Date(isoStr);
+  const now = new Date();
+  const diff = end - now;
+  if (diff <= 0) return 'ending now';
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function shortDate(d) {
+  if (!d || d === 'None') return '';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-CA', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+}
+
+async function api(url, opts = {}) {
+  const res = await fetch(url, {
+    headers: {'Content-Type': 'application/json'},
+    ...opts,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || res.statusText);
+  }
+  return res.json();
+}
+
+/* ── State ── */
+let houses = [];
+let snipeRefreshTimer = null;
+
+/* ── Tab switching ── */
+$$('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $$('.tab-btn').forEach(b => b.classList.remove('active'));
+    $$('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    $(`#tab-${btn.dataset.tab}`).classList.add('active');
+
+    if (btn.dataset.tab === 'snipes') startSnipeRefresh();
+    else stopSnipeRefresh();
+
+    if (btn.dataset.tab === 'houses') loadHouses();
+    if (btn.dataset.tab === 'history') loadHistory();
+    if (btn.dataset.tab === 'setup') { checkCookieStatus(); loadSettings(); }
+    if (btn.dataset.tab === 'activity') loadActivityLog();
+  });
+});
+
+/* ── Auction Houses ── */
+async function loadHouses() {
+  try {
+    houses = await api('/api/auction-houses');
+    renderHousesList();
+    populateHouseDropdowns();
+  } catch (e) {
+    console.error('Failed to load houses', e);
+  }
+}
+
+function renderHousesList() {
+  const el = $('#houses-list');
+  if (!houses.length) {
+    el.innerHTML = '<div class="empty">No auction houses yet. Add one above.</div>';
+    return;
+  }
+  el.innerHTML = houses.map(h => {
+    let driveInfo = '';
+    if (h.distance_km) {
+      const parts = [];
+      parts.push(h.distance_km + ' km');
+      if (h.drive_minutes) parts.push(Math.round(h.drive_minutes) + ' min');
+      if (h.round_trip_gas_cost) parts.push('~' + money(h.round_trip_gas_cost) + ' gas round trip');
+      driveInfo = `<span style="color:var(--text-dim);font-size:0.8rem;display:block;margin-top:2px">${parts.join(' · ')}</span>`;
+    }
+    const addrInfo = h.address ? `<span style="color:var(--text-dim);font-size:0.8rem;display:block">${esc(h.address)}</span>` : '';
+    return `
+    <div class="house-item" id="house-row-${h.id}">
+      <div class="house-info">
+        <span class="house-name">${esc(h.name)}</span>
+        <span class="house-premium">${h.premium_pct}% buyer's premium${h.per_item_fee ? ` + $${h.per_item_fee.toFixed(2)}/item` : ''}</span>
+        ${addrInfo}${driveInfo}
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" style="background:var(--accent)" onclick="editHouse(${h.id})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteHouse(${h.id})">Delete</button>
+      </div>
+    </div>
+  `}).join('');
+}
+
+function populateHouseDropdowns() {
+  const html = houses.length
+    ? houses.map(h => {
+        let label = `${esc(h.name)} (${h.premium_pct}%)`;
+        if (h.round_trip_gas_cost) label += ` · ~$${h.round_trip_gas_cost.toFixed(0)} gas`;
+        return `<option value="${h.id}" data-premium="${h.premium_pct}">${label}</option>`;
+      }).join('')
+    : '<option value="">No houses - add one first</option>';
+  ['#deal-house', '#snipe-house'].forEach(sel => {
+    const dd = $(sel);
+    dd.innerHTML = html;
+  });
+}
+
+async function addHouse() {
+  const name = $('#house-name').value.trim();
+  const premium = parseFloat($('#house-premium').value);
+  if (!name || isNaN(premium)) return alert('Fill in name and premium %');
+  const perItemFee = parseFloat($('#house-item-fee').value) || 0;
+  const address = $('#house-address').value.trim() || null;
+  const distance = parseFloat($('#house-distance').value) || null;
+  const driveTime = parseFloat($('#house-drive-time').value) || null;
+  try {
+    await api('/api/auction-houses', {
+      method: 'POST',
+      body: JSON.stringify({name, premium_pct: premium, per_item_fee: perItemFee, address, distance_km: distance, drive_minutes: driveTime}),
+    });
+    $('#house-name').value = '';
+    $('#house-premium').value = '';
+    $('#house-item-fee').value = '';
+    $('#house-address').value = '';
+    $('#house-distance').value = '';
+    $('#house-drive-time').value = '';
+    await loadHouses();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+function editHouse(id) {
+  const h = houses.find(x => x.id === id);
+  if (!h) return;
+  const row = document.getElementById('house-row-' + id);
+  row.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="eh-name-${id}" value="${esc(h.name)}" placeholder="Name" style="flex:2;min-width:150px">
+        <input id="eh-premium-${id}" type="number" value="${h.premium_pct}" placeholder="Premium %" step="0.1" style="width:80px">
+        <input id="eh-fee-${id}" type="number" value="${h.per_item_fee || 0}" placeholder="$/item" step="0.25" style="width:80px" title="Per-item fee">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="eh-address-${id}" value="${esc(h.address || '')}" placeholder="Address" style="flex:2;min-width:150px">
+        <input id="eh-distance-${id}" type="number" value="${h.distance_km || ''}" placeholder="km (auto)" step="0.1" style="width:80px">
+        <input id="eh-drive-${id}" type="number" value="${h.drive_minutes || ''}" placeholder="min (auto)" step="1" style="width:80px">
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:flex-start">
+      <button class="btn btn-sm" style="background:var(--green)" onclick="saveHouse(${id})">Save</button>
+      <button class="btn btn-sm" style="background:var(--text-dim)" onclick="renderHousesList()">Cancel</button>
+    </div>
+  `;
+}
+
+async function saveHouse(id) {
+  const name = document.getElementById('eh-name-' + id).value.trim();
+  const premium = parseFloat(document.getElementById('eh-premium-' + id).value);
+  if (!name || isNaN(premium)) return alert('Name and premium % are required');
+  const perItemFee = parseFloat(document.getElementById('eh-fee-' + id).value) || 0;
+  const address = document.getElementById('eh-address-' + id).value.trim() || null;
+  const distance = parseFloat(document.getElementById('eh-distance-' + id).value) || null;
+  const driveTime = parseFloat(document.getElementById('eh-drive-' + id).value) || null;
+  try {
+    await api(`/api/auction-houses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({name, premium_pct: premium, per_item_fee: perItemFee, address, distance_km: distance, drive_minutes: driveTime}),
+    });
+    await loadHouses();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function deleteHouse(id) {
+  if (!confirm('Delete this auction house?')) return;
+  try {
+    await api(`/api/auction-houses/${id}`, {method: 'DELETE'});
+    await loadHouses();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+/* ── Deal Analyzer ── */
+async function analyzeDeal() {
+  const item = $('#deal-item').value.trim();
+  const bid = parseFloat($('#deal-bid').value);
+  const houseId = parseInt($('#deal-house').value);
+
+  if (!item) return alert('Enter an item name');
+  if (isNaN(bid) || bid <= 0) return alert('Enter a valid bid price');
+  if (isNaN(houseId)) return alert('Select an auction house');
+
+  const btn = $('#btn-analyze');
+  btn.disabled = true;
+  $('#deal-results').style.display = 'none';
+  $('#deal-loading').style.display = 'flex';
+
+  try {
+    const data = await api(`/api/deal-check?item_name=${encodeURIComponent(item)}&bid_price=${bid}&auction_house_id=${houseId}`, {
+      method: 'POST',
+    });
+    renderDealResults(data, item);
+  } catch (e) {
+    alert('Analysis failed: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    $('#deal-loading').style.display = 'none';
+  }
+}
+
+function renderDealResults(data, item) {
+  const c = data.cost;
+  const ebay = data.ebay;
+
+  // Cost breakdown
+  $('#cost-breakdown').innerHTML = `
+    <span class="label">Bid Price</span><span class="value">${money(c.bid_price)}</span>
+    <span class="label">+ Premium (${c.premium_pct}%)</span><span class="value">${money(c.premium_amount)}</span>
+    <span class="label">Subtotal</span><span class="value">${money(c.subtotal)}</span>
+    <span class="label">+ HST (13%)</span><span class="value">${money(c.tax_amount)}</span>
+    <span class="total-label">TOTAL</span><span class="total-value">${money(c.total)}</span>
+  `;
+
+  // Show eBay price data if available
+  const hasSold = ebay.sold && ebay.sold.avg;
+  const hasActive = ebay.active && ebay.active.avg;
+  if (hasSold || hasActive) {
+    // If we only have active (combined market prices), relabel and hide sold
+    if (!hasSold && hasActive) {
+      $('#ebay-sold-section').style.display = 'none';
+      $('#ebay-active-label').textContent = 'eBay Market Prices';
+    } else {
+      $('#ebay-sold-section').style.display = 'block';
+      $('#ebay-active-label').textContent = 'eBay Active Listings';
+      $('#ebay-sold').innerHTML = priceGrid(ebay.sold);
+      $('#ebay-sold-listings').innerHTML = listingDrillDown(ebay.sold, 'sold');
+    }
+    $('#ebay-active').innerHTML = priceGrid(ebay.active);
+    $('#ebay-active-listings').innerHTML = listingDrillDown(ebay.active, 'active');
+    $('#ebay-prices-section').style.display = 'block';
+    $('#search-hint').textContent = 'Prices found! Click for full results:';
+  } else {
+    $('#ebay-prices-section').style.display = 'none';
+    $('#ebay-sold-listings').innerHTML = '';
+    $('#ebay-active-listings').innerHTML = '';
+    $('#search-hint').textContent = 'Click to check prices on each platform:';
+  }
+
+  // Search buttons
+  $('#search-links').innerHTML = `
+    <a href="${ebay.sold.search_url}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none">eBay Sold</a>
+    <a href="${ebay.active.search_url}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none">eBay Active</a>
+    <a href="${ebay.amazon_url}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none;background:#ff9900">Amazon</a>
+    ${ebay.kijiji_url ? `<a href="${ebay.kijiji_url}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none;background:#373373">Kijiji</a>` : ''}
+    ${ebay.fb_marketplace_url ? `<a href="${ebay.fb_marketplace_url}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none;background:#1877F2">FB Marketplace</a>` : ''}
+  `;
+
+  // Verdict
+  const v = data.verdict;
+  const vMap = {
+    good_deal: {text:'Good Deal', color:'var(--green)'},
+    fair: {text:'Fair', color:'var(--yellow)'},
+    overpriced: {text:'Overpriced', color:'var(--red)'},
+    unknown: {text:'Unknown', color:'var(--text-dim)'},
+  };
+  const vd = vMap[v] || vMap.unknown;
+  const ebayAvg = (ebay.sold && ebay.sold.avg) || (ebay.active && ebay.active.avg) || null;
+  const savings = ebayAvg != null ? ebayAvg - c.total : null;
+  const savingsLabel = (ebay.sold && ebay.sold.avg) ? 'eBay avg sold' : 'eBay avg market';
+  const savingsHtml = savings != null
+    ? `<div style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-dim)">${savings >= 0 ? 'Saving' : 'Overpaying'}: <strong style="color:${savings >= 0 ? 'var(--green)' : 'var(--red)'}">${money(Math.abs(savings))}</strong> vs ${savingsLabel}</div>`
+    : '';
+  $('#verdict-box').innerHTML = `
+    <div class="verdict-text" style="color:${vd.color}">${vd.text}</div>
+    ${savingsHtml}
+  `;
+
+  $('#deal-results').style.display = 'block';
+}
+
+function priceGrid(data) {
+  return `
+    <div class="price-cell"><div class="cell-label">Low</div><div class="cell-value">${money(data.low)}</div></div>
+    <div class="price-cell"><div class="cell-label">Average</div><div class="cell-value">${money(data.avg)}</div></div>
+    <div class="price-cell"><div class="cell-label">High</div><div class="cell-value">${money(data.high)}</div></div>
+  `;
+}
+
+function listingDrillDown(data, id) {
+  if (!data.listings || !data.listings.length) return '';
+  const listId = `listing-list-${id}`;
+  const items = data.listings.map(l => `
+    <div class="listing-item">
+      <span class="listing-title"><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.title)}</a></span>
+      <span class="listing-price">${money(l.price)}</span>
+    </div>
+  `).join('');
+  return `
+    <button class="listing-toggle" onclick="toggleListings('${listId}', this)">Show ${data.listings.length} listings</button>
+    <div id="${listId}" class="listing-list" style="display:none">
+      ${items}
+    </div>
+    <p class="listing-note" style="display:none" id="${listId}-note">Prices via Startpage index (1-7 days old). Click listings for live eBay pages.</p>
+  `;
+}
+
+function toggleListings(listId, btn) {
+  const el = document.getElementById(listId);
+  const note = document.getElementById(listId + '-note');
+  if (el.style.display === 'none') {
+    el.style.display = 'flex';
+    if (note) note.style.display = 'block';
+    btn.textContent = 'Hide listings';
+  } else {
+    el.style.display = 'none';
+    if (note) note.style.display = 'none';
+    btn.textContent = btn.textContent.replace('Hide', 'Show');
+    const count = el.querySelectorAll('.listing-item').length;
+    btn.textContent = `Show ${count} listings`;
+  }
+}
+
+/* ── Snipe Queue ── */
+async function queueSnipe() {
+  const url = $('#snipe-url').value.trim();
+  const cap = parseFloat($('#snipe-cap').value);
+  const houseId = parseInt($('#snipe-house').value);
+
+  if (!url) return alert('Enter a HiBid lot URL');
+  if (isNaN(cap) || cap <= 0) return alert('Enter a valid max cap');
+  if (isNaN(houseId)) return alert('Select an auction house');
+
+  const btn = $('#btn-snipe');
+  btn.disabled = true;
+  try {
+    await api('/api/snipes', {
+      method: 'POST',
+      body: JSON.stringify({lot_url: url, max_cap: cap, auction_house_id: houseId}),
+    });
+    $('#snipe-url').value = '';
+    $('#snipe-cap').value = '';
+    await loadSnipes();
+    await refreshBudget();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function loadSnipes() {
+  try {
+    const snipes = await api('/api/snipes');
+    const tbody = $('#snipes-tbody');
+    if (!snipes.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">No active snipes</td></tr>';
+      return;
+    }
+    // We need house info for true cost calc; use cached houses
+    const houseMap = {};
+    houses.forEach(h => houseMap[h.id] = h);
+
+    tbody.innerHTML = snipes.map(s => {
+      const thumb = s.thumbnail_url
+        ? `<img class="snipe-thumb" src="${esc(s.thumbnail_url)}" alt="" loading="lazy" onerror="this.style.display='none'">`
+        : '<div class="snipe-thumb" style="background:var(--border)"></div>';
+      const house = s.auction_house_id ? houseMap[s.auction_house_id] : null;
+      const housePremium = house ? (1 + house.premium_pct / 100) : 1.18;
+      const capCost = s.max_cap ? '~' + money(s.max_cap * housePremium * 1.13) : 'N/A';
+      const canCancel = ['scheduled', 'watching', 'bidding'].includes(s.status);
+      const canBid = ['scheduled', 'watching', 'bidding'].includes(s.status);
+      const endsIn = s.end_time ? timeUntil(s.end_time) : '—';
+      const bidCell = canBid
+        ? `<div style="display:flex;gap:4px;align-items:center">
+             <input type="number" id="bid-input-${s.id}" min="0" step="0.01" placeholder="${s.current_bid ? (s.current_bid + (s.increment || 5)).toFixed(2) : '0.00'}"
+               style="width:80px;padding:4px 6px;font-size:0.8rem;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:4px"
+               onkeydown="if(event.key==='Enter')placeBid(${s.id})">
+             <button class="btn btn-primary btn-sm" onclick="placeBid(${s.id})" style="white-space:nowrap">Bid</button>
+           </div>
+           <div id="bid-result-${s.id}" style="font-size:0.75rem;margin-top:2px"></div>`
+        : '';
+      const winning = s.our_last_bid && s.current_bid && s.our_last_bid >= s.current_bid;
+      const bidInfo = winning
+        ? `<div style="color:var(--green);font-size:0.75rem;font-weight:700">YOU'RE WINNING</div>`
+        : (s.our_last_bid ? `<div style="color:var(--red);font-size:0.75rem;font-weight:700">OUTBID</div>` : '');
+      const feeStr = (house && house.per_item_fee) ? ` + $${house.per_item_fee.toFixed(2)}/item` : '';
+      const houseLine = house
+        ? `<div style="color:var(--text-dim);font-size:0.75rem;margin-top:2px">${esc(house.name)} (${house.premium_pct}%${feeStr})</div>`
+        : '';
+      const gasLine = (house && house.round_trip_gas_cost)
+        ? `<div style="color:var(--text-dim);font-size:0.7rem">${house.distance_km} km · ~${money(house.round_trip_gas_cost)} gas RT</div>`
+        : '';
+      return `<tr>
+        <td>${thumb}</td>
+        <td><a href="${esc(s.lot_url)}" target="_blank" rel="noopener">${esc(s.lot_title || 'Untitled')}</a>${houseLine}${gasLine}</td>
+        <td>${money(s.current_bid)}${bidInfo}</td>
+        <td style="cursor:pointer" onclick="editMaxCap(${s.id}, ${s.max_cap})" id="cap-cell-${s.id}" title="Click to edit">${money(s.max_cap)}</td>
+        <td style="white-space:nowrap">${endsIn}</td>
+        <td>${statusBadge(s.status)}</td>
+        <td>${bidCell}</td>
+        <td>${canCancel ? `<button class="btn btn-danger btn-sm" onclick="cancelSnipe(${s.id})">Cancel</button>` : ''}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    console.error('Failed to load snipes', e);
+  }
+}
+
+function editMaxCap(snipeId, currentCap) {
+  const cell = $(`#cap-cell-${snipeId}`);
+  cell.onclick = null; // prevent re-trigger
+  cell.innerHTML = `<input type="number" id="cap-edit-${snipeId}" value="${currentCap}" min="0" step="0.01"
+    style="width:75px;padding:4px 6px;font-size:0.85rem;background:var(--bg-input);color:var(--text);border:1px solid var(--accent);border-radius:4px"
+    onkeydown="if(event.key==='Enter')saveMaxCap(${snipeId}); if(event.key==='Escape')loadSnipes();"
+    onblur="saveMaxCap(${snipeId})">`;
+  $(`#cap-edit-${snipeId}`).focus();
+  $(`#cap-edit-${snipeId}`).select();
+}
+
+async function saveMaxCap(snipeId) {
+  const input = $(`#cap-edit-${snipeId}`);
+  if (!input) return;
+  const val = parseFloat(input.value);
+  if (isNaN(val) || val <= 0) { loadSnipes(); return; }
+  try {
+    await api(`/api/snipes/${snipeId}`, {
+      method: 'PUT',
+      body: JSON.stringify({max_cap: val}),
+    });
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+  await loadSnipes();
+}
+
+async function placeBid(snipeId) {
+  const input = $(`#bid-input-${snipeId}`);
+  const resultDiv = $(`#bid-result-${snipeId}`);
+  const amount = parseFloat(input.value);
+  if (isNaN(amount) || amount <= 0) { resultDiv.innerHTML = '<span style="color:var(--red)">Enter an amount</span>'; return; }
+
+  resultDiv.innerHTML = '<span style="color:var(--text-dim)">Bidding...</span>';
+  try {
+    const data = await api(`/api/snipes/${snipeId}/bid`, {
+      method: 'POST',
+      body: JSON.stringify({bid_amount: amount}),
+    });
+    if (data.success) {
+      const color = data.status === 'WINNING' ? 'var(--green)' : 'var(--yellow)';
+      resultDiv.innerHTML = `<span style="color:${color};font-weight:700">${data.status}</span>` +
+        (data.suggested_bid ? ` <span style="color:var(--text-dim)">next: $${data.suggested_bid}</span>` : '');
+      if (data.suggested_bid) input.value = data.suggested_bid;
+    } else {
+      resultDiv.innerHTML = `<span style="color:var(--red)">${data.message || data.status}</span>`;
+    }
+    // Delay refresh so user sees the result before table rebuilds
+    setTimeout(async () => { await loadSnipes(); await refreshBudget(); }, 2000);
+  } catch (e) {
+    resultDiv.innerHTML = `<span style="color:var(--red)">${e.message}</span>`;
+  }
+}
+
+async function cancelSnipe(id) {
+  if (!confirm('Cancel this snipe?')) return;
+  try {
+    await api(`/api/snipes/${id}/cancel`, {method: 'POST'});
+    await loadSnipes();
+    await refreshBudget();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+function startSnipeRefresh() {
+  loadSnipes();
+  stopSnipeRefresh();
+  snipeRefreshTimer = setInterval(() => {
+    // Don't rebuild the table while user is typing in a bid input
+    const active = document.activeElement;
+    if (active && active.id && active.id.startsWith('bid-input-')) return;
+    loadSnipes();
+  }, 5000);
+}
+
+function stopSnipeRefresh() {
+  if (snipeRefreshTimer) {
+    clearInterval(snipeRefreshTimer);
+    snipeRefreshTimer = null;
+  }
+}
+
+/* ── History ── */
+async function loadHistory() {
+  try {
+    const data = await api('/api/history');
+
+    const dealsTbody = $('#history-deals');
+    if (data.deals && data.deals.length) {
+      dealsTbody.innerHTML = data.deals.map(d => `
+        <tr>
+          <td>${esc(d.item_name)}</td>
+          <td>${money(d.bid_price)}</td>
+          <td>${money(d.true_cost)}</td>
+          <td>${money(d.ebay_avg_sold)}</td>
+          <td>${verdictBadge(d.verdict)}</td>
+          <td>${shortDate(d.created_at)}</td>
+        </tr>
+      `).join('');
+    } else {
+      dealsTbody.innerHTML = '<tr><td colspan="6" class="empty">No deal checks yet</td></tr>';
+    }
+
+    const snipesTbody = $('#history-snipes');
+    if (data.snipes && data.snipes.length) {
+      snipesTbody.innerHTML = data.snipes.map(s => `
+        <tr>
+          <td><a href="${esc(s.lot_url)}" target="_blank" rel="noopener">${esc(s.lot_title || 'Untitled')}</a></td>
+          <td>${money(s.max_cap)}</td>
+          <td>${money(s.current_bid)}</td>
+          <td>${statusBadge(s.status)}</td>
+          <td>${shortDate(s.created_at)}</td>
+        </tr>
+      `).join('');
+    } else {
+      snipesTbody.innerHTML = '<tr><td colspan="5" class="empty">No past snipes yet</td></tr>';
+    }
+  } catch (e) {
+    console.error('Failed to load history', e);
+  }
+}
+
+/* ── Setup: Bookmarklet ── */
+function buildBookmarklet() {
+  // Tiny loader - loads the full bookmarklet.js from the app server
+  const appHost = window.location.origin;
+  const code = `(function(){var s=document.createElement('script');s.src='${appHost}/static/bookmarklet.js?t='+Date.now();document.body.appendChild(s);})()`;
+  return 'javascript:' + encodeURIComponent(code);
+}
+
+// Set bookmarklet href
+document.addEventListener('DOMContentLoaded', () => {
+  const bmLink = document.getElementById('bookmarklet-drag');
+  if (bmLink) bmLink.href = buildBookmarklet();
+});
+
+/* ── Setup: Cookie Import ── */
+async function importCookies() {
+  const raw = $('#cookie-json').value.trim();
+  if (!raw) return alert('Paste the cookie JSON first');
+  let cookies;
+  try {
+    cookies = JSON.parse(raw);
+  } catch (e) {
+    return alert('Invalid JSON. Make sure you exported from Cookie Editor.');
+  }
+  if (!Array.isArray(cookies)) return alert('Expected a JSON array of cookies');
+
+  try {
+    const result = await api('/api/cookies', {
+      method: 'POST',
+      body: JSON.stringify({cookies}),
+    });
+    alert(`Imported ${result.count} HiBid cookies successfully!`);
+    $('#cookie-json').value = '';
+    checkCookieStatus();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function checkCookieStatus() {
+  try {
+    const data = await api('/api/cookies/status');
+    const badge = $('#cookie-status-badge');
+    if (data.has_cookies) {
+      badge.textContent = `Loaded (${data.count} cookies)`;
+      badge.className = 'cookie-status cookie-ok';
+    } else {
+      badge.textContent = 'Not loaded';
+      badge.className = 'cookie-status cookie-missing';
+    }
+  } catch (e) {
+    console.error('Cookie status check failed', e);
+  }
+}
+
+/* ── Escape HTML ── */
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+/* ── Budget Bar ── */
+async function refreshBudget() {
+  try {
+    const b = await api('/api/budget');
+    const fill = $('#budget-fill');
+    const text = $('#budget-text');
+    const pct = Math.min(100, b.pct_used);
+
+    if (b.global_spend_cap === 0) {
+      fill.style.width = '100%';
+      fill.className = 'budget-fill red';
+      text.innerHTML = '<span style="color:var(--red);font-weight:700">Budget not set - sniping disabled</span>';
+      return;
+    }
+
+    fill.style.width = pct + '%';
+    fill.className = 'budget-fill ' + (pct < 50 ? 'green' : pct < 80 ? 'yellow' : 'red');
+    text.textContent = '$' + b.spent.toFixed(2) + ' / $' + b.global_spend_cap.toFixed(2) + ' spent';
+
+    // Exposure bar ("if you win")
+    const eFill = $('#exposure-fill');
+    const eText = $('#exposure-text');
+    const ePct = Math.min(100, b.exposure_pct || 0);
+    eFill.style.width = ePct + '%';
+    eFill.className = 'budget-fill ' + (ePct < 50 ? 'green' : ePct < 80 ? 'yellow' : 'red');
+    if (b.exposure > 0) {
+      eText.textContent = '$' + b.exposure_total.toFixed(2) + ' / $' + b.global_spend_cap.toFixed(2) + ' (active bids: $' + b.exposure.toFixed(2) + ')';
+    } else {
+      eText.textContent = 'No active bids';
+    }
+  } catch (e) {
+    console.error('Budget refresh failed', e);
+  }
+}
+
+/* ── Kill Switch ── */
+async function killAllSnipes() {
+  if (!confirm('STOP ALL SNIPES?\n\nThis will immediately cancel every active snipe. This cannot be undone.')) return;
+  try {
+    await api('/api/snipes/cancel-all', {method: 'POST'});
+    await loadSnipes();
+    await refreshBudget();
+    alert('All snipes cancelled.');
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+/* ── Settings ── */
+async function loadSettings() {
+  try {
+    const s = await api('/api/settings');
+    $('#settings-global-cap').value = s.global_spend_cap || '';
+    $('#settings-single-cap').value = s.max_single_snipe_cap || '';
+    $('#settings-home-address').value = s.home_address || '';
+    $('#settings-gas-price').value = s.gas_price_per_liter || 1.80;
+    $('#settings-fuel').value = s.fuel_consumption || 11.6;
+  } catch (e) {
+    console.error('Failed to load settings', e);
+  }
+}
+
+async function saveSettings() {
+  const globalCap = parseFloat($('#settings-global-cap').value);
+  const singleCap = parseFloat($('#settings-single-cap').value);
+  if (isNaN(globalCap) || isNaN(singleCap)) return alert('Enter valid numbers for budget caps');
+  const homeAddress = $('#settings-home-address').value.trim() || null;
+  const gasPrice = parseFloat($('#settings-gas-price').value) || 1.80;
+  const fuel = parseFloat($('#settings-fuel').value) || 11.6;
+  try {
+    await api('/api/settings', {
+      method: 'PUT',
+      body: JSON.stringify({
+        global_spend_cap: globalCap, max_single_snipe_cap: singleCap,
+        home_address: homeAddress, gas_price_per_liter: gasPrice, fuel_consumption: fuel,
+      }),
+    });
+    const saved = $('#settings-saved');
+    saved.style.display = 'inline';
+    setTimeout(() => saved.style.display = 'none', 2000);
+    await refreshBudget();
+    await loadHouses(); // Recalculate gas costs with new fuel settings
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+/* ── Activity Log ── */
+async function loadActivityLog() {
+  try {
+    const logs = await api('/api/bid-log?limit=100');
+    const tbody = $('#activity-tbody');
+    if (!logs.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">No bid activity yet</td></tr>';
+      return;
+    }
+    const resultLabel = {placed:'Placed', budget_blocked:'Blocked (budget)', cap_blocked:'Blocked (cap)', error:'Error'};
+    tbody.innerHTML = logs.map(l => `
+      <tr>
+        <td style="white-space:nowrap">${shortDate(l.created_at)}</td>
+        <td><a href="${esc(l.lot_url)}" target="_blank" rel="noopener">${esc(l.lot_title || 'Unknown')}</a></td>
+        <td>${money(l.bid_amount)}</td>
+        <td><span class="log-${l.result}">${resultLabel[l.result] || l.result}</span></td>
+        <td style="color:var(--text-dim);font-size:0.8rem">${esc(l.message || '')}</td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    console.error('Failed to load activity log', e);
+  }
+}
+
+/* ── Init ── */
+loadHouses();
+refreshBudget();
+setInterval(refreshBudget, 10000);
+</script>
+</body>
+</html>

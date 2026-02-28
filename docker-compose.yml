@@ -1,0 +1,14 @@
+services:
+  hibid-sniper:
+    build: .
+    container_name: hibid-sniper
+    restart: unless-stopped
+    ports:
+      - "8199:8199"
+    volumes:
+      - ./data:/app/data
+      - ./browser_profile:/app/browser_profile
+    env_file:
+      - .env
+    environment:
+      - HIBID_DB_PATH=/app/data/hibid_sniper.db

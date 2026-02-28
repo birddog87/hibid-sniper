@@ -1070,11 +1070,11 @@ function _renderSnipeRow(s, houseMap) {
     <td style="white-space:nowrap">${endsIn}</td>
     <td>${statusBadge(s.status)}</td>
     <td>${bidCell}</td>
-    <td style="display:flex;gap:4px;flex-wrap:nowrap">
+    <td><div style="display:flex;gap:4px;white-space:nowrap">
       ${canPause ? `<button class="btn btn-sm" onclick="pauseSnipe(${s.id})" style="background:var(--yellow);color:#000">Pause</button>` : ''}
       ${canResume ? `<button class="btn btn-sm" onclick="resumeSnipe(${s.id})" style="background:var(--green);color:#000">Resume</button>` : ''}
       ${canCancel ? `<button class="btn btn-danger btn-sm" onclick="cancelSnipe(${s.id})">Cancel</button>` : ''}
-    </td>
+    </div></td>
   </tr>`;
 }
 

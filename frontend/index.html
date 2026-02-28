@@ -125,6 +125,7 @@ input::placeholder{color:var(--text-dim)}
 .badge-lost{background:rgba(255,23,68,0.15);color:var(--red)}
 .badge-capped_out{background:rgba(255,145,0,0.15);color:var(--orange)}
 .badge-scheduled{background:rgba(108,99,255,0.15);color:var(--accent)}
+.badge-paused{background:rgba(255,213,0,0.15);color:var(--yellow)}
 .badge-cancelled{background:rgba(136,136,170,0.15);color:var(--text-dim)}
 
 /* Results panel */
@@ -343,7 +344,13 @@ tr:hover td{background:rgba(108,99,255,0.03)}
       <button class="btn btn-primary" id="btn-snipe" onclick="queueSnipe()">Queue Snipe</button>
     </div>
     <div class="card">
-      <h2>Active Snipes</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <h2 style="margin:0">Active Snipes</h2>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" onclick="pauseAllSnipes()" style="background:var(--yellow);color:#000;font-size:0.8rem;padding:4px 10px">Pause All</button>
+          <button class="btn btn-sm" onclick="resumeAllSnipes()" style="background:var(--green);color:#000;font-size:0.8rem;padding:4px 10px">Resume All</button>
+        </div>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -597,6 +604,7 @@ function statusBadge(s) {
     won: ['Won', 'badge-won'],
     lost: ['Lost', 'badge-lost'],
     capped_out: ['Capped Out', 'badge-capped_out'],
+    paused: ['Paused', 'badge-paused'],
     cancelled: ['Cancelled', 'badge-cancelled'],
   };
   const [label, cls] = map[s] || [s, 'badge-unknown'];
@@ -978,8 +986,10 @@ async function loadSnipes() {
       const house = s.auction_house_id ? houseMap[s.auction_house_id] : null;
       const housePremium = house ? (1 + house.premium_pct / 100) : 1.18;
       const capCost = s.max_cap ? '~' + money(s.max_cap * housePremium * 1.13) : 'N/A';
-      const canCancel = ['scheduled', 'watching', 'bidding'].includes(s.status);
+      const canCancel = ['scheduled', 'watching', 'bidding', 'paused'].includes(s.status);
       const canBid = ['scheduled', 'watching', 'bidding'].includes(s.status);
+      const canPause = ['scheduled', 'watching', 'bidding'].includes(s.status);
+      const canResume = s.status === 'paused';
       const endsIn = s.end_time
         ? `${timeUntil(s.end_time)}<div style="color:var(--text-dim);font-size:0.7rem">${shortDate(s.end_time)}</div>`
         : '—';
@@ -1011,7 +1021,11 @@ async function loadSnipes() {
         <td style="white-space:nowrap">${endsIn}</td>
         <td>${statusBadge(s.status)}</td>
         <td>${bidCell}</td>
-        <td>${canCancel ? `<button class="btn btn-danger btn-sm" onclick="cancelSnipe(${s.id})">Cancel</button>` : ''}</td>
+        <td style="display:flex;gap:4px;flex-wrap:nowrap">
+          ${canPause ? `<button class="btn btn-sm" onclick="pauseSnipe(${s.id})" style="background:var(--yellow);color:#000">Pause</button>` : ''}
+          ${canResume ? `<button class="btn btn-sm" onclick="resumeSnipe(${s.id})" style="background:var(--green);color:#000">Resume</button>` : ''}
+          ${canCancel ? `<button class="btn btn-danger btn-sm" onclick="cancelSnipe(${s.id})">Cancel</button>` : ''}
+        </td>
       </tr>`;
     }).join('');
   } catch (e) {
@@ -1071,6 +1085,35 @@ async function placeBid(snipeId) {
   } catch (e) {
     resultDiv.innerHTML = `<span style="color:var(--red)">${e.message}</span>`;
   }
+}
+
+async function pauseSnipe(id) {
+  try {
+    await api(`/api/snipes/${id}/pause`, {method: 'POST'});
+    await loadSnipes();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function resumeSnipe(id) {
+  try {
+    await api(`/api/snipes/${id}/resume`, {method: 'POST'});
+    await loadSnipes();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function pauseAllSnipes() {
+  if (!confirm('Pause all active snipes?')) return;
+  try {
+    await api('/api/snipes/pause-all', {method: 'POST'});
+    await loadSnipes();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function resumeAllSnipes() {
+  try {
+    await api('/api/snipes/resume-all', {method: 'POST'});
+    await loadSnipes();
+  } catch (e) { alert('Error: ' + e.message); }
 }
 
 async function cancelSnipe(id) {

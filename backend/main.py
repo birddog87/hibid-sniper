@@ -733,6 +733,156 @@ async def refresh_snipe_times():
     return {"ok": True, "updated": updated}
 
 
+@app.post("/api/snipes/{snipe_id}/pause")
+def pause_snipe(snipe_id: int):
+    """Pause a scheduled/watching snipe — stops it from bidding."""
+    if snipe_id in active_snipes:
+        active_snipes[snipe_id].cancel()
+        del active_snipes[snipe_id]
+    engine = get_engine()
+    with Session(engine) as session:
+        snipe = session.get(Snipe, snipe_id)
+        if not snipe:
+            raise HTTPException(404, "Snipe not found")
+        if snipe.status not in ("scheduled", "watching", "bidding"):
+            raise HTTPException(400, f"Cannot pause snipe with status '{snipe.status}'")
+        snipe.status = "paused"
+        session.commit()
+    return {"ok": True}
+
+
+@app.post("/api/snipes/{snipe_id}/resume")
+async def resume_snipe(snipe_id: int):
+    """Resume a paused snipe — puts it back in the queue."""
+    engine = get_engine()
+    with Session(engine) as session:
+        snipe = session.get(Snipe, snipe_id)
+        if not snipe:
+            raise HTTPException(404, "Snipe not found")
+        if snipe.status != "paused":
+            raise HTTPException(400, f"Cannot resume snipe with status '{snipe.status}'")
+
+        house = session.get(AuctionHouse, snipe.auction_house_id)
+        if not house:
+            raise HTTPException(404, "Auction house not found")
+
+        snipe.status = "scheduled" if snipe.end_time else "watching"
+        session.commit()
+
+        # Re-create the SnipeJob
+        def _get_budget():
+            with Session(get_engine()) as sess:
+                return get_budget_status(sess)
+
+        def _log_bid(sid, bid_amount, result, message=""):
+            with Session(get_engine()) as sess:
+                log_bid_attempt(sess, snipe_id, snipe.lot_title or "Unknown",
+                               snipe.lot_url, bid_amount, result, message)
+
+        job = SnipeJob(
+            lot_url=snipe.lot_url,
+            max_cap=snipe.max_cap,
+            premium_pct=house.premium_pct,
+            snipe_id=snipe.id,
+            end_time=snipe.end_time,
+            get_budget=_get_budget,
+            log_bid=_log_bid,
+        )
+        active_snipes[snipe.id] = job
+
+        async def update_status(j: SnipeJob):
+            with Session(get_engine()) as s:
+                db_snipe = s.get(Snipe, snipe_id)
+                if db_snipe:
+                    db_snipe.status = j.status
+                    db_snipe.current_bid = getattr(j, 'last_known_price', db_snipe.current_bid)
+                    if j.last_bid_placed is not None:
+                        db_snipe.our_last_bid = j.last_bid_placed
+                    if j.status == "won" and j.last_bid_placed:
+                        db_snipe.winning_bid = j.last_bid_placed
+                    s.commit()
+            if j.status in ("won", "lost", "capped_out"):
+                active_snipes.pop(snipe_id, None)
+
+        asyncio.create_task(job.run(on_status_change=update_status))
+    return {"ok": True}
+
+
+@app.post("/api/snipes/pause-all")
+def pause_all_snipes():
+    """Pause all active snipes."""
+    for job in list(active_snipes.values()):
+        job.cancel()
+    active_snipes.clear()
+    engine = get_engine()
+    with Session(engine) as session:
+        snipes = session.query(Snipe).filter(
+            Snipe.status.in_(["scheduled", "watching", "bidding"])
+        ).all()
+        for snipe in snipes:
+            snipe.status = "paused"
+        session.commit()
+        return {"ok": True, "paused": len(snipes)}
+
+
+@app.post("/api/snipes/resume-all")
+async def resume_all_snipes():
+    """Resume all paused snipes."""
+    engine = get_engine()
+    resumed = 0
+    with Session(engine) as session:
+        snipes = session.query(Snipe).filter(Snipe.status == "paused").all()
+        for snipe in snipes:
+            house = session.get(AuctionHouse, snipe.auction_house_id)
+            if not house:
+                continue
+            snipe.status = "scheduled" if snipe.end_time else "watching"
+
+            def _get_budget():
+                with Session(get_engine()) as sess:
+                    return get_budget_status(sess)
+
+            def _make_log_bid(sid, title, url):
+                def _log_bid(snipe_id, bid_amount, result, message=""):
+                    with Session(get_engine()) as sess:
+                        log_bid_attempt(sess, sid, title or "Unknown",
+                                       url, bid_amount, result, message)
+                return _log_bid
+
+            job = SnipeJob(
+                lot_url=snipe.lot_url,
+                max_cap=snipe.max_cap,
+                premium_pct=house.premium_pct,
+                snipe_id=snipe.id,
+                end_time=snipe.end_time,
+                get_budget=_get_budget,
+                log_bid=_make_log_bid(snipe.id, snipe.lot_title, snipe.lot_url),
+            )
+            active_snipes[snipe.id] = job
+
+            sid = snipe.id
+            async def make_update_status(snipe_id):
+                async def update_status(j: SnipeJob):
+                    with Session(get_engine()) as s:
+                        db_snipe = s.get(Snipe, snipe_id)
+                        if db_snipe:
+                            db_snipe.status = j.status
+                            db_snipe.current_bid = getattr(j, 'last_known_price', db_snipe.current_bid)
+                            if j.last_bid_placed is not None:
+                                db_snipe.our_last_bid = j.last_bid_placed
+                            if j.status == "won" and j.last_bid_placed:
+                                db_snipe.winning_bid = j.last_bid_placed
+                            s.commit()
+                    if j.status in ("won", "lost", "capped_out"):
+                        active_snipes.pop(snipe_id, None)
+                return update_status
+
+            asyncio.create_task(job.run(on_status_change=await make_update_status(sid)))
+            resumed += 1
+        session.commit()
+    return {"ok": True, "resumed": resumed}
+
+
 @app.post("/api/snipes/{snipe_id}/cancel")
 def cancel_snipe(snipe_id: int):
     if snipe_id in active_snipes:

@@ -352,7 +352,7 @@ tr:hover td{background:rgba(108,99,255,0.03)}
               <th>Title</th>
               <th>Current Bid</th>
               <th>Max Cap</th>
-              <th>Ends In</th>
+              <th title="Approximate — captured when snipe was queued">Ends ~</th>
               <th>Status</th>
               <th>Bid Now</th>
               <th></th>
@@ -980,7 +980,9 @@ async function loadSnipes() {
       const capCost = s.max_cap ? '~' + money(s.max_cap * housePremium * 1.13) : 'N/A';
       const canCancel = ['scheduled', 'watching', 'bidding'].includes(s.status);
       const canBid = ['scheduled', 'watching', 'bidding'].includes(s.status);
-      const endsIn = s.end_time ? timeUntil(s.end_time) : '—';
+      const endsIn = s.end_time
+        ? `${timeUntil(s.end_time)}<div style="color:var(--text-dim);font-size:0.7rem">${shortDate(s.end_time)}</div>`
+        : '—';
       const bidCell = canBid
         ? `<div style="display:flex;gap:4px;align-items:center">
              <input type="number" id="bid-input-${s.id}" min="0" step="0.01" placeholder="${s.current_bid ? (s.current_bid + (s.increment || 5)).toFixed(2) : '0.00'}"

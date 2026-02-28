@@ -128,6 +128,11 @@ input::placeholder{color:var(--text-dim)}
 .badge-paused{background:rgba(255,213,0,0.15);color:var(--yellow)}
 .badge-cancelled{background:rgba(136,136,170,0.15);color:var(--text-dim)}
 
+/* Sortable table headers */
+.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+.sortable:hover{color:var(--accent)}
+.sortable span{font-size:0.7rem;opacity:0.7}
+
 /* Results panel */
 .results-panel{margin-top:1rem}
 .cost-breakdown{display:grid;grid-template-columns:1fr auto;gap:0.25rem 1rem;font-size:0.9rem}
@@ -349,6 +354,7 @@ tr:hover td{background:rgba(108,99,255,0.03)}
         <div style="display:flex;gap:6px">
           <button class="btn btn-sm" onclick="pauseAllSnipes()" style="background:var(--yellow);color:#000;font-size:0.8rem;padding:4px 10px">Pause All</button>
           <button class="btn btn-sm" onclick="resumeAllSnipes()" style="background:var(--green);color:#000;font-size:0.8rem;padding:4px 10px">Resume All</button>
+          <button class="btn btn-sm" id="btn-reset-sort" onclick="resetSnipeSort()" style="background:var(--border);color:var(--text);font-size:0.8rem;padding:4px 10px;display:none">Reset Sort</button>
         </div>
       </div>
       <div class="table-wrap">
@@ -356,11 +362,11 @@ tr:hover td{background:rgba(108,99,255,0.03)}
           <thead>
             <tr>
               <th></th>
-              <th>Title</th>
-              <th>Current Bid</th>
-              <th>Max Cap</th>
-              <th title="Approximate — captured when snipe was queued">Ends ~</th>
-              <th>Status</th>
+              <th class="sortable" onclick="sortSnipes('title')">Title <span id="sort-ind-title"></span></th>
+              <th class="sortable" onclick="sortSnipes('current_bid')">Current Bid <span id="sort-ind-current_bid"></span></th>
+              <th class="sortable" onclick="sortSnipes('max_cap')">Max Cap <span id="sort-ind-max_cap"></span></th>
+              <th class="sortable" onclick="sortSnipes('end_time')" title="Approximate — captured when snipe was queued">Ends ~ <span id="sort-ind-end_time"></span></th>
+              <th class="sortable" onclick="sortSnipes('status')">Status <span id="sort-ind-status"></span></th>
               <th>Bid Now</th>
               <th></th>
             </tr>
@@ -967,67 +973,140 @@ async function queueSnipe() {
   }
 }
 
+let _snipesData = [];
+let _snipeSort = { key: null, dir: 'asc' };
+
+function sortSnipes(key) {
+  if (_snipeSort.key === key) {
+    _snipeSort.dir = _snipeSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _snipeSort.key = key;
+    _snipeSort.dir = 'asc';
+  }
+  renderSnipes();
+  $('#btn-reset-sort').style.display = '';
+}
+
+function resetSnipeSort() {
+  _snipeSort = { key: null, dir: 'asc' };
+  renderSnipes();
+  $('#btn-reset-sort').style.display = 'none';
+}
+
+function _sortedSnipes() {
+  const data = [..._snipesData];
+  const { key, dir } = _snipeSort;
+  if (!key) return data; // default: insertion order (by id)
+
+  const statusOrder = ['bidding','watching','scheduled','paused','won','lost','capped_out','cancelled'];
+  data.sort((a, b) => {
+    let va, vb;
+    if (key === 'title') {
+      va = (a.lot_title || '').toLowerCase();
+      vb = (b.lot_title || '').toLowerCase();
+    } else if (key === 'current_bid' || key === 'max_cap') {
+      va = a[key] || 0;
+      vb = b[key] || 0;
+    } else if (key === 'end_time') {
+      va = a.end_time ? new Date(a.end_time).getTime() : Infinity;
+      vb = b.end_time ? new Date(b.end_time).getTime() : Infinity;
+    } else if (key === 'status') {
+      va = statusOrder.indexOf(a.status);
+      vb = statusOrder.indexOf(b.status);
+    } else {
+      va = a[key]; vb = b[key];
+    }
+    if (va < vb) return dir === 'asc' ? -1 : 1;
+    if (va > vb) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  return data;
+}
+
+function _updateSortIndicators() {
+  ['title','current_bid','max_cap','end_time','status'].forEach(k => {
+    const el = document.getElementById('sort-ind-' + k);
+    if (el) el.textContent = _snipeSort.key === k ? (_snipeSort.dir === 'asc' ? '▲' : '▼') : '';
+  });
+}
+
+function _renderSnipeRow(s, houseMap) {
+  const thumb = s.thumbnail_url
+    ? `<img class="snipe-thumb" src="${esc(s.thumbnail_url)}" alt="" loading="lazy" onerror="this.style.display='none'">`
+    : '<div class="snipe-thumb" style="background:var(--border)"></div>';
+  const house = s.auction_house_id ? houseMap[s.auction_house_id] : null;
+  const canCancel = ['scheduled', 'watching', 'bidding', 'paused'].includes(s.status);
+  const canBid = ['scheduled', 'watching', 'bidding'].includes(s.status);
+  const canPause = ['scheduled', 'watching', 'bidding'].includes(s.status);
+  const canResume = s.status === 'paused';
+  const endsIn = s.end_time
+    ? `${timeUntil(s.end_time)}<div style="color:var(--text-dim);font-size:0.7rem">${shortDate(s.end_time)}</div>`
+    : '—';
+  const bidCell = canBid
+    ? `<div style="display:flex;gap:4px;align-items:center">
+         <input type="number" id="bid-input-${s.id}" min="0" step="0.01" placeholder="${s.current_bid ? (s.current_bid + (s.increment || 5)).toFixed(2) : '0.00'}"
+           style="width:80px;padding:4px 6px;font-size:0.8rem;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:4px"
+           onkeydown="if(event.key==='Enter')placeBid(${s.id})">
+         <button class="btn btn-primary btn-sm" onclick="placeBid(${s.id})" style="white-space:nowrap">Bid</button>
+       </div>
+       <div id="bid-result-${s.id}" style="font-size:0.75rem;margin-top:2px"></div>`
+    : '';
+  const winning = s.our_last_bid && s.current_bid && s.our_last_bid >= s.current_bid;
+  const bidInfo = winning
+    ? `<div style="color:var(--green);font-size:0.75rem;font-weight:700">YOU'RE WINNING</div>`
+    : (s.our_last_bid ? `<div style="color:var(--red);font-size:0.75rem;font-weight:700">OUTBID</div>` : '');
+  const feeStr = (house && house.per_item_fee) ? ` + $${house.per_item_fee.toFixed(2)}/item` : '';
+  const houseLine = house
+    ? `<div style="color:var(--text-dim);font-size:0.75rem;margin-top:2px">${esc(house.name)} (${house.premium_pct}%${feeStr})</div>`
+    : '';
+  const gasLine = (house && house.round_trip_gas_cost)
+    ? `<div style="color:var(--text-dim);font-size:0.7rem">${house.distance_km} km · ~${money(house.round_trip_gas_cost)} gas RT</div>`
+    : '';
+  return `<tr>
+    <td>${thumb}</td>
+    <td><a href="${esc(s.lot_url)}" target="_blank" rel="noopener">${esc(s.lot_title || 'Untitled')}</a>${houseLine}${gasLine}</td>
+    <td>${money(s.current_bid)}${bidInfo}</td>
+    <td style="cursor:pointer" onclick="editMaxCap(${s.id}, ${s.max_cap})" id="cap-cell-${s.id}" title="Click to edit">${money(s.max_cap)}</td>
+    <td style="white-space:nowrap">${endsIn}</td>
+    <td>${statusBadge(s.status)}</td>
+    <td>${bidCell}</td>
+    <td style="display:flex;gap:4px;flex-wrap:nowrap">
+      ${canPause ? `<button class="btn btn-sm" onclick="pauseSnipe(${s.id})" style="background:var(--yellow);color:#000">Pause</button>` : ''}
+      ${canResume ? `<button class="btn btn-sm" onclick="resumeSnipe(${s.id})" style="background:var(--green);color:#000">Resume</button>` : ''}
+      ${canCancel ? `<button class="btn btn-danger btn-sm" onclick="cancelSnipe(${s.id})">Cancel</button>` : ''}
+    </td>
+  </tr>`;
+}
+
+function renderSnipes() {
+  const snipes = _sortedSnipes();
+  const tbody = $('#snipes-tbody');
+  if (!snipes.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">No active snipes</td></tr>';
+    _updateSortIndicators();
+    return;
+  }
+  const houseMap = {};
+  houses.forEach(h => houseMap[h.id] = h);
+
+  tbody.innerHTML = snipes.map(s => _renderSnipeRow(s, houseMap)).join('');
+  _updateSortIndicators();
+}
+
 async function loadSnipes() {
   try {
     const snipes = await api('/api/snipes');
+    _snipesData = snipes;
     const tbody = $('#snipes-tbody');
     if (!snipes.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty">No active snipes</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="empty">No active snipes</td></tr>';
       return;
     }
     // We need house info for true cost calc; use cached houses
     const houseMap = {};
     houses.forEach(h => houseMap[h.id] = h);
 
-    tbody.innerHTML = snipes.map(s => {
-      const thumb = s.thumbnail_url
-        ? `<img class="snipe-thumb" src="${esc(s.thumbnail_url)}" alt="" loading="lazy" onerror="this.style.display='none'">`
-        : '<div class="snipe-thumb" style="background:var(--border)"></div>';
-      const house = s.auction_house_id ? houseMap[s.auction_house_id] : null;
-      const housePremium = house ? (1 + house.premium_pct / 100) : 1.18;
-      const capCost = s.max_cap ? '~' + money(s.max_cap * housePremium * 1.13) : 'N/A';
-      const canCancel = ['scheduled', 'watching', 'bidding', 'paused'].includes(s.status);
-      const canBid = ['scheduled', 'watching', 'bidding'].includes(s.status);
-      const canPause = ['scheduled', 'watching', 'bidding'].includes(s.status);
-      const canResume = s.status === 'paused';
-      const endsIn = s.end_time
-        ? `${timeUntil(s.end_time)}<div style="color:var(--text-dim);font-size:0.7rem">${shortDate(s.end_time)}</div>`
-        : '—';
-      const bidCell = canBid
-        ? `<div style="display:flex;gap:4px;align-items:center">
-             <input type="number" id="bid-input-${s.id}" min="0" step="0.01" placeholder="${s.current_bid ? (s.current_bid + (s.increment || 5)).toFixed(2) : '0.00'}"
-               style="width:80px;padding:4px 6px;font-size:0.8rem;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:4px"
-               onkeydown="if(event.key==='Enter')placeBid(${s.id})">
-             <button class="btn btn-primary btn-sm" onclick="placeBid(${s.id})" style="white-space:nowrap">Bid</button>
-           </div>
-           <div id="bid-result-${s.id}" style="font-size:0.75rem;margin-top:2px"></div>`
-        : '';
-      const winning = s.our_last_bid && s.current_bid && s.our_last_bid >= s.current_bid;
-      const bidInfo = winning
-        ? `<div style="color:var(--green);font-size:0.75rem;font-weight:700">YOU'RE WINNING</div>`
-        : (s.our_last_bid ? `<div style="color:var(--red);font-size:0.75rem;font-weight:700">OUTBID</div>` : '');
-      const feeStr = (house && house.per_item_fee) ? ` + $${house.per_item_fee.toFixed(2)}/item` : '';
-      const houseLine = house
-        ? `<div style="color:var(--text-dim);font-size:0.75rem;margin-top:2px">${esc(house.name)} (${house.premium_pct}%${feeStr})</div>`
-        : '';
-      const gasLine = (house && house.round_trip_gas_cost)
-        ? `<div style="color:var(--text-dim);font-size:0.7rem">${house.distance_km} km · ~${money(house.round_trip_gas_cost)} gas RT</div>`
-        : '';
-      return `<tr>
-        <td>${thumb}</td>
-        <td><a href="${esc(s.lot_url)}" target="_blank" rel="noopener">${esc(s.lot_title || 'Untitled')}</a>${houseLine}${gasLine}</td>
-        <td>${money(s.current_bid)}${bidInfo}</td>
-        <td style="cursor:pointer" onclick="editMaxCap(${s.id}, ${s.max_cap})" id="cap-cell-${s.id}" title="Click to edit">${money(s.max_cap)}</td>
-        <td style="white-space:nowrap">${endsIn}</td>
-        <td>${statusBadge(s.status)}</td>
-        <td>${bidCell}</td>
-        <td style="display:flex;gap:4px;flex-wrap:nowrap">
-          ${canPause ? `<button class="btn btn-sm" onclick="pauseSnipe(${s.id})" style="background:var(--yellow);color:#000">Pause</button>` : ''}
-          ${canResume ? `<button class="btn btn-sm" onclick="resumeSnipe(${s.id})" style="background:var(--green);color:#000">Resume</button>` : ''}
-          ${canCancel ? `<button class="btn btn-danger btn-sm" onclick="cancelSnipe(${s.id})">Cancel</button>` : ''}
-        </td>
-      </tr>`;
-    }).join('');
+    renderSnipes();
   } catch (e) {
     console.error('Failed to load snipes', e);
   }

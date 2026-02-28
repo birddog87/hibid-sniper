@@ -42,18 +42,61 @@
   const lotIdx = pathParts.indexOf('lot');
   const lotId = lotIdx >= 0 ? pathParts[lotIdx + 1] : '';
 
-  // Parse end time from .lot-time-left: "Time Remaining: 2d 5h 30m 10s - Friday 04:00 PM"
+  // Parse end time from .lot-time-left: "Time Remaining: 1d 21h 13m 5s - Sunday 07:10 PM"
+  // Strategy: parse the absolute day/time after the dash (accurate), fall back to countdown math
   const timeEl = document.querySelector('.lot-time-left');
   const timeText = timeEl ? timeEl.innerText.trim() : '';
   let endTime = null;
   if (timeText) {
-    let totalSec = 0;
-    const dM = timeText.match(/(\d+)\s*d/); if (dM) totalSec += parseInt(dM[1]) * 86400;
-    const hM = timeText.match(/(\d+)\s*h/); if (hM) totalSec += parseInt(hM[1]) * 3600;
-    const mM = timeText.match(/(\d+)\s*m(?!a)/); if (mM) totalSec += parseInt(mM[1]) * 60;
-    const sM = timeText.match(/(\d+)\s*s/); if (sM) totalSec += parseInt(sM[1]);
-    if (totalSec > 0) {
-      endTime = new Date(Date.now() + totalSec * 1000).toISOString();
+    // Try to parse "- Sunday 07:10 PM" or "- March 1 07:10 PM" after the dash
+    const dashMatch = timeText.match(/-\s*(.+)/);
+    if (dashMatch) {
+      const dateStr = dashMatch[1].trim();
+      // HiBid uses day names like "Sunday 07:10 PM" — resolve to actual date
+      const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+      const dayTimeMatch = dateStr.match(/^(\w+)\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+      if (dayTimeMatch) {
+        const dayName = dayTimeMatch[1].toLowerCase();
+        const dayIdx = days.indexOf(dayName);
+        let hours = parseInt(dayTimeMatch[2]);
+        const mins = parseInt(dayTimeMatch[3]);
+        const ampm = dayTimeMatch[4].toUpperCase();
+        if (ampm === 'PM' && hours !== 12) hours += 12;
+        if (ampm === 'AM' && hours === 12) hours = 0;
+        if (dayIdx !== -1) {
+          // Find the next occurrence of this day
+          const now = new Date();
+          const todayIdx = now.getDay();
+          let daysAhead = dayIdx - todayIdx;
+          if (daysAhead < 0) daysAhead += 7;
+          if (daysAhead === 0) {
+            // Same day — check if the time is in the past
+            const candidate = new Date(now);
+            candidate.setHours(hours, mins, 0, 0);
+            if (candidate <= now) daysAhead = 7;
+          }
+          const end = new Date(now);
+          end.setDate(end.getDate() + daysAhead);
+          end.setHours(hours, mins, 0, 0);
+          endTime = end.toISOString();
+        }
+      }
+      // Try "March 1 07:10 PM" or "Mar 1, 2026 07:10 PM" as fallback
+      if (!endTime) {
+        const parsed = new Date(dateStr);
+        if (!isNaN(parsed.getTime())) endTime = parsed.toISOString();
+      }
+    }
+    // Last resort: countdown math (less accurate but better than nothing)
+    if (!endTime) {
+      let totalSec = 0;
+      const dM = timeText.match(/(\d+)\s*d/); if (dM) totalSec += parseInt(dM[1]) * 86400;
+      const hM = timeText.match(/(\d+)\s*h/); if (hM) totalSec += parseInt(hM[1]) * 3600;
+      const mM = timeText.match(/(\d+)\s*m(?!a)/); if (mM) totalSec += parseInt(mM[1]) * 60;
+      const sM = timeText.match(/(\d+)\s*s/); if (sM) totalSec += parseInt(sM[1]);
+      if (totalSec > 0) {
+        endTime = new Date(Date.now() + totalSec * 1000).toISOString();
+      }
     }
   }
 

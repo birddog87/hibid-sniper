@@ -540,7 +540,7 @@ def list_snipes():
                 "current_bid": s.current_bid,
                 "status": s.status,
                 "thumbnail_url": s.thumbnail_url,
-                "end_time": str(s.end_time) if s.end_time else None,
+                "end_time": (s.end_time.isoformat() + "Z") if s.end_time else None,
                 "our_last_bid": s.our_last_bid,
                 "increment": s.increment,
                 "auction_house_id": s.auction_house_id,
@@ -623,7 +623,7 @@ async def create_snipe(req: SnipeCreate):
             "lot_title": lot.title,
             "current_bid": lot.current_bid,
             "increment": lot.increment,
-            "end_time": str(parsed_end_time) if parsed_end_time else None,
+            "end_time": (parsed_end_time.isoformat() + "Z") if parsed_end_time else None,
             "status": snipe.status,
         }
 
@@ -664,6 +664,73 @@ def update_snipe(snipe_id: int, req: SnipeUpdate):
                 active_snipes[snipe_id].max_cap = req.max_cap
         session.commit()
     return {"ok": True}
+
+
+@app.post("/api/snipes/refresh-times")
+async def refresh_snipe_times():
+    """Re-scrape end times from HiBid for all scheduled snipes using Playwright."""
+    import re
+    from backend.hibid_scraper import get_browser
+
+    engine = get_engine()
+    with Session(engine) as session:
+        snipes = session.query(Snipe).filter(Snipe.status.in_(["scheduled", "watching"])).all()
+        if not snipes:
+            return {"ok": True, "updated": 0}
+
+        browser = await get_browser()
+        page = await browser.new_page()
+        updated = 0
+        days_map = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+
+        try:
+            for snipe in snipes:
+                try:
+                    await page.goto(snipe.lot_url, wait_until="domcontentloaded", timeout=20000)
+                    await page.wait_for_timeout(3000)
+                    time_el = await page.query_selector('.lot-time-left')
+                    if not time_el:
+                        continue
+                    time_text = await time_el.inner_text()
+                    # Parse "Time Remaining: 1d 21h 13m - Sunday 07:10 PM"
+                    dash_match = re.search(r'-\s*(\w+)\s+(\d{1,2}):(\d{2})\s*(AM|PM)', time_text, re.IGNORECASE)
+                    if not dash_match:
+                        continue
+                    day_name = dash_match.group(1).lower()
+                    hours = int(dash_match.group(2))
+                    mins = int(dash_match.group(3))
+                    ampm = dash_match.group(4).upper()
+                    if ampm == 'PM' and hours != 12:
+                        hours += 12
+                    if ampm == 'AM' and hours == 12:
+                        hours = 0
+                    if day_name not in days_map:
+                        continue
+                    day_idx = days_map.index(day_name)
+                    now = datetime.now()
+                    today_idx = now.weekday()
+                    days_ahead = day_idx - today_idx
+                    if days_ahead < 0:
+                        days_ahead += 7
+                    if days_ahead == 0:
+                        candidate = now.replace(hour=hours, minute=mins, second=0, microsecond=0)
+                        if candidate <= now:
+                            days_ahead = 7
+                    from datetime import timedelta
+                    end = now.replace(hour=hours, minute=mins, second=0, microsecond=0) + timedelta(days=days_ahead)
+                    snipe.end_time = end
+                    # Also update in-memory job
+                    if snipe.id in active_snipes:
+                        active_snipes[snipe.id].end_time = end
+                    updated += 1
+                    logger.info(f"Snipe {snipe.id}: updated end_time to {end.isoformat()}")
+                except Exception as e:
+                    logger.warning(f"Snipe {snipe.id}: failed to refresh time: {e}")
+            session.commit()
+        finally:
+            await page.close()
+
+    return {"ok": True, "updated": updated}
 
 
 @app.post("/api/snipes/{snipe_id}/cancel")
@@ -846,7 +913,7 @@ async def create_snipe_from_browser(req: BrowserSnipeCreate):
             "id": snipe.id,
             "lot_title": req.lot_title,
             "current_bid": req.current_bid,
-            "end_time": str(parsed_end_time) if parsed_end_time else None,
+            "end_time": (parsed_end_time.isoformat() + "Z") if parsed_end_time else None,
             "status": snipe.status,
         }
 

@@ -140,6 +140,11 @@ class SnipeJob:
                 seconds_left = state["seconds_left"]
                 is_ended = state["is_ended"]
                 self.last_known_price = current_price
+                self.increment = increment
+
+                # Update DB with current price on every poll
+                if on_status_change:
+                    await on_status_change(self)
 
                 if is_ended:
                     if state.get("we_are_winning"):

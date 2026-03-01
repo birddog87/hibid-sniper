@@ -256,6 +256,7 @@ class SnipeJob:
             # Check if ended — keyword match is authoritative regardless of parsed time
             ended_keywords = ("ended" in time_text.lower()
                               or "closed" in time_text.lower()
+                              or "closing" in time_text.lower()
                               or "sold" in time_text.lower())
             is_ended = ended_keywords or (seconds_left == 0)
 

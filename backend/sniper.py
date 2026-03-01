@@ -253,6 +253,8 @@ class SnipeJob:
             }""")
 
             if not state or not state.get("current_price"):
+                page_url = page.url
+                logger.warning(f"Snipe {self.snipe_id}: _get_auction_state got nothing. URL={page_url}, raw={state}")
                 return None
 
             # Parse "High Bid: 16.00 CAD" -> 16.00

@@ -128,12 +128,26 @@ class SnipeJob:
             else:
                 logger.warning("No auth token - bid placement may fail")
 
+            consecutive_failures = 0
+            MAX_FAILURES_BEFORE_RELOAD = 3
+            logger.info(f"Snipe {self.snipe_id}: Entering poll loop")
+
             while not self.cancelled:
                 state = await self._get_auction_state(page)
                 if state is None:
-                    logger.error("Could not read auction state")
+                    consecutive_failures += 1
+                    logger.error(f"Snipe {self.snipe_id}: Could not read auction state (attempt {consecutive_failures})")
+                    if consecutive_failures >= MAX_FAILURES_BEFORE_RELOAD:
+                        logger.warning(f"Snipe {self.snipe_id}: {consecutive_failures} consecutive failures, reloading page")
+                        try:
+                            await page.goto(self.lot_url, wait_until="domcontentloaded", timeout=30000)
+                            await page.wait_for_timeout(2000)
+                        except Exception as e:
+                            logger.error(f"Snipe {self.snipe_id}: Page reload failed: {e}")
+                        consecutive_failures = 0
                     await asyncio.sleep(POLL_INTERVAL)
                     continue
+                consecutive_failures = 0
 
                 current_price = state["current_price"]
                 increment = state["increment"]
@@ -141,6 +155,8 @@ class SnipeJob:
                 is_ended = state["is_ended"]
                 self.last_known_price = current_price
                 self.increment = increment
+                logger.info(f"Snipe {self.snipe_id}: price=${current_price} secs={seconds_left} ended={is_ended} time='{state.get('time_left', '')[:50]}'")
+
 
                 # Update DB with current price on every poll
                 if on_status_change:

@@ -11,6 +11,8 @@ class AuctionHouse(Base):
     per_item_fee = Column(Float, default=0.0)
     distance_km = Column(Float)
     drive_minutes = Column(Float)
+    auctioneer_id = Column(Integer)
+    always_include = Column(Integer, default=0)
     created_at = Column(DateTime, server_default=func.now())
 
 class Snipe(Base):
@@ -54,6 +56,8 @@ class Settings(Base):
     home_address = Column(String)
     gas_price_per_liter = Column(Float, default=1.80)
     fuel_consumption = Column(Float, default=11.6)
+    watchlist_postal_code = Column(String)
+    watchlist_radius_km = Column(Integer, default=50)
 
 class BidLog(Base):
     __tablename__ = "bid_log"
@@ -65,3 +69,36 @@ class BidLog(Base):
     result = Column(String, nullable=False)
     message = Column(String)
     created_at = Column(DateTime, server_default=func.now())
+
+class WatchlistSearch(Base):
+    __tablename__ = "watchlist_searches"
+    id = Column(Integer, primary_key=True)
+    search_term = Column(String, nullable=False)
+    enabled = Column(Integer, default=1)
+    created_at = Column(DateTime, server_default=func.now())
+
+class WatchlistResult(Base):
+    __tablename__ = "watchlist_results"
+    id = Column(Integer, primary_key=True)
+    search_id = Column(Integer, ForeignKey("watchlist_searches.id"), nullable=False)
+    hibid_lot_id = Column(Integer, unique=True)
+    title = Column(String)
+    lot_url = Column(String)
+    thumbnail_url = Column(String)
+    current_bid = Column(Float)
+    bid_count = Column(Integer)
+    min_bid = Column(Float)
+    closes_at = Column(DateTime)
+    is_closed = Column(Integer, default=0)
+    auction_name = Column(String)
+    auction_city = Column(String)
+    auctioneer_name = Column(String)
+    auctioneer_id = Column(Integer)
+    distance_miles = Column(Float)
+    buyer_premium_pct = Column(Float)
+    shipping_offered = Column(Integer, default=0)
+    currency = Column(String, default="CAD")
+    status = Column(String, default="new")
+    matched_house_id = Column(Integer, ForeignKey("auction_houses.id"))
+    first_seen_at = Column(DateTime, server_default=func.now())
+    last_seen_at = Column(DateTime, server_default=func.now())

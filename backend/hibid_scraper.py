@@ -1,9 +1,12 @@
 import json
+import logging
 import os
 import re
+
+logger = logging.getLogger(__name__)
 from urllib.parse import urlparse
 from dataclasses import dataclass
-from playwright.async_api import async_playwright, Page, Browser
+from playwright.async_api import async_playwright, Page, Browser, BrowserContext
 
 COOKIE_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "hibid_cookies.json")
 
@@ -52,14 +55,25 @@ def parse_price_from_text(text: str) -> float:
 
 
 # Browser instance management
-_browser: Browser | None = None
+_browser: BrowserContext | None = None
 PROFILE_DIR = "/home/htpc/hibid-sniper/browser_profile"
 
 
-async def get_browser() -> Browser:
+def _browser_alive() -> bool:
+    """Check if the persistent browser context is still usable."""
+    if _browser is None:
+        return False
+    try:
+        # BrowserContext doesn't have is_connected(); check via its parent browser
+        return _browser.browser is not None and _browser.browser.is_connected()
+    except Exception:
+        return False
+
+
+async def get_browser() -> BrowserContext:
     """Get or create a persistent Chromium browser context."""
     global _browser
-    if _browser is None or not _browser.is_connected():
+    if not _browser_alive():
         pw = await async_playwright().start()
         _browser = await pw.chromium.launch_persistent_context(
             user_data_dir=PROFILE_DIR,
@@ -112,9 +126,12 @@ async def _load_saved_cookies():
 async def inject_cookies(cookies: list[dict]):
     """Inject cookies into the running browser context."""
     global _browser
-    if _browser and _browser.is_connected():
+    if _browser_alive():
         converted = _convert_cookies(cookies)
         await _browser.add_cookies(converted)
+        logger.info(f"Injected {len(converted)} cookies into browser context")
+    else:
+        logger.warning("inject_cookies called but browser not alive — cookies saved to file only")
 
 
 async def scrape_lot(url: str) -> LotDetails:
@@ -142,8 +159,25 @@ async def scrape_lot(url: str) -> LotDetails:
     next_bid = parse_price_from_text(bid_btn_text) if bid_btn_text else 0
     increment = (next_bid - current_bid) if next_bid > current_bid else 5.0
 
-    # Time: ".lot-time-left" -> "Time Remaining: 54m 43s - Friday 04:00 PM"
-    time_text = await _safe_text(page, ".lot-time-left") or ""
+    # Time: prefer exact close time from Apollo SSR state, fall back to DOM text
+    time_text = await page.evaluate("""() => {
+        // Extract exact close time from HiBid's embedded Apollo state
+        const scripts = document.querySelectorAll('script');
+        for (const s of scripts) {
+            const text = s.textContent;
+            if (!text.includes('timeLeftTitle')) continue;
+            // "Internet Bidding closes at: 3/17/2026 8:56:30 PM EST"
+            const m = text.match(/"timeLeftTitle"\\s*:\\s*"Internet Bidding closes at:\\s*([^"]+)"/);
+            if (m) return 'CLOSES_AT:' + m[1].trim();
+            // fallback: timeLeftSeconds
+            const s2 = text.match(/"timeLeftSeconds"\\s*:\\s*([\\d.]+)/);
+            if (s2) return 'SECS:' + s2[1];
+            break;
+        }
+        // DOM fallback
+        const el = document.querySelector('.lot-time-left');
+        return el ? el.innerText.trim() : '';
+    }""") or ""
 
     # Thumbnail — HiBid uses background-image on divs, not <img> tags
     thumbnail_url = await page.evaluate("""() => {

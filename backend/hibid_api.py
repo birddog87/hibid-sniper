@@ -216,3 +216,50 @@ async def place_bid_direct(lot_id: int, bid_amount: float, lot_url: str | None =
             return {"success": False, "status": "error", "message": str(e), "suggested_bid": None}
 
     return {"success": False, "status": "error", "message": "Failed after retry", "suggested_bid": None}
+
+
+async def get_lot_status_via_html(lot_url: str) -> dict | None:
+    """Fetch lot page HTML and extract live status from Apollo SSR data.
+    No Playwright needed — immune to frozen page timers."""
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(lot_url, headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            })
+        html = resp.text
+
+        # Extract timeLeftSeconds
+        secs_match = re.search(r'"timeLeftSeconds"\s*:\s*([\d.]+)', html)
+        seconds_left = float(secs_match.group(1)) if secs_match else None
+
+        # Extract current bid from SSR: "currentBidAmount":27.5
+        bid_match = re.search(r'"currentBidAmount"\s*:\s*([\d.]+)', html)
+        current_bid = float(bid_match.group(1)) if bid_match else None
+
+        # Fallback: parse from visible text "High Bid: 27.50 CAD"
+        if current_bid is None:
+            vis_match = re.search(r'High Bid:\s*([\d,]+\.?\d*)', html)
+            if vis_match:
+                current_bid = float(vis_match.group(1).replace(',', ''))
+
+        # Extract bid count
+        count_match = re.search(r'"bidCount"\s*:\s*(\d+)', html)
+        bid_count = int(count_match.group(1)) if count_match else None
+
+        # Check if ended
+        ended = bool(re.search(r'Bidding\s+(Closed|has Closed)', html, re.IGNORECASE))
+
+        # Extract lot-specific timeLeftTitle to verify this is our lot's data
+        title_match = re.search(r'"timeLeftTitle"\s*:\s*"([^"]*)"', html)
+        time_title = title_match.group(1) if title_match else None
+
+        return {
+            "current_price": current_bid,
+            "seconds_left": seconds_left,
+            "is_ended": ended,
+            "bid_count": bid_count,
+            "time_title": time_title,
+        }
+    except Exception as e:
+        logger.warning(f"get_lot_status_via_html failed: {e}")
+        return None

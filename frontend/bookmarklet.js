@@ -44,60 +44,98 @@
   const lotIdx = pathParts.indexOf('lot');
   const lotId = lotIdx >= 0 ? pathParts[lotIdx + 1] : '';
 
-  // Parse end time from .lot-time-left: "Time Remaining: 1d 21h 13m 5s - Sunday 07:10 PM"
-  // Strategy: parse the absolute day/time after the dash (accurate), fall back to countdown math
-  const timeEl = document.querySelector('.lot-time-left');
-  const timeText = timeEl ? timeEl.innerText.trim() : '';
+  // Parse end time — prefer exact close time from Apollo SSR state over fragile DOM parsing
   let endTime = null;
-  if (timeText) {
-    // Try to parse "- Sunday 07:10 PM" or "- March 1 07:10 PM" after the dash
-    const dashMatch = timeText.match(/-\s*(.+)/);
-    if (dashMatch) {
-      const dateStr = dashMatch[1].trim();
-      // HiBid uses day names like "Sunday 07:10 PM" — resolve to actual date
-      const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-      const dayTimeMatch = dateStr.match(/^(\w+)\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-      if (dayTimeMatch) {
-        const dayName = dayTimeMatch[1].toLowerCase();
-        const dayIdx = days.indexOf(dayName);
-        let hours = parseInt(dayTimeMatch[2]);
-        const mins = parseInt(dayTimeMatch[3]);
-        const ampm = dayTimeMatch[4].toUpperCase();
-        if (ampm === 'PM' && hours !== 12) hours += 12;
-        if (ampm === 'AM' && hours === 12) hours = 0;
-        if (dayIdx !== -1) {
-          // Find the next occurrence of this day
-          const now = new Date();
-          const todayIdx = now.getDay();
-          let daysAhead = dayIdx - todayIdx;
-          if (daysAhead < 0) daysAhead += 7;
-          if (daysAhead === 0) {
-            // Same day — check if the time is in the past
-            const candidate = new Date(now);
-            candidate.setHours(hours, mins, 0, 0);
-            if (candidate <= now) daysAhead = 7;
+
+  // Strategy 1: Extract close time from HiBid's embedded Apollo state
+  // Prefer timeLeftSeconds (timezone-immune countdown) over absolute time string
+  // (HiBid often mislabels EDT as EST, causing 1-hour errors)
+  try {
+    const scripts = document.querySelectorAll('script');
+    for (const s of scripts) {
+      const text = s.textContent;
+      if (!text.includes('timeLeftTitle')) continue;
+      // Best: use timeLeftSeconds — countdown from now, no timezone ambiguity
+      const secsMatch = text.match(/"timeLeftSeconds"\s*:\s*([\d.]+)/);
+      if (secsMatch) {
+        const secsLeft = parseFloat(secsMatch[1]);
+        if (secsLeft > 0) endTime = new Date(Date.now() + secsLeft * 1000).toISOString();
+      }
+      // Fallback: parse absolute close time string (only if seconds unavailable)
+      if (!endTime) {
+        const titleMatch = text.match(/"timeLeftTitle"\s*:\s*"Internet Bidding closes at:\s*([^"]+)"/);
+        if (titleMatch) {
+          const closeStr = titleMatch[1].trim();
+          const m = closeStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)\s*(\w+)?$/i);
+          if (m) {
+            // Parse as local time (browser handles DST correctly)
+            let hrs = parseInt(m[4]);
+            const mins = parseInt(m[5]);
+            const secs = parseInt(m[6] || '0');
+            const ampm = m[7].toUpperCase();
+            if (ampm === 'PM' && hrs !== 12) hrs += 12;
+            if (ampm === 'AM' && hrs === 12) hrs = 0;
+            // Ignore HiBid's tz label (often wrong) — treat as local time
+            const d = new Date(parseInt(m[3]), parseInt(m[1]) - 1, parseInt(m[2]), hrs, mins, secs);
+            if (!isNaN(d.getTime())) endTime = d.toISOString();
           }
-          const end = new Date(now);
-          end.setDate(end.getDate() + daysAhead);
-          end.setHours(hours, mins, 0, 0);
-          endTime = end.toISOString();
         }
       }
-      // Try "March 1 07:10 PM" or "Mar 1, 2026 07:10 PM" as fallback
-      if (!endTime) {
-        const parsed = new Date(dateStr);
-        if (!isNaN(parsed.getTime())) endTime = parsed.toISOString();
-      }
+      break;
     }
-    // Last resort: countdown math (less accurate but better than nothing)
-    if (!endTime) {
-      let totalSec = 0;
-      const dM = timeText.match(/(\d+)\s*d/); if (dM) totalSec += parseInt(dM[1]) * 86400;
-      const hM = timeText.match(/(\d+)\s*h/); if (hM) totalSec += parseInt(hM[1]) * 3600;
-      const mM = timeText.match(/(\d+)\s*m(?!a)/); if (mM) totalSec += parseInt(mM[1]) * 60;
-      const sM = timeText.match(/(\d+)\s*s/); if (sM) totalSec += parseInt(sM[1]);
-      if (totalSec > 0) {
-        endTime = new Date(Date.now() + totalSec * 1000).toISOString();
+  } catch(e) { /* Apollo extraction failed, fall through to DOM parsing */ }
+
+  // Strategy 2: Parse .lot-time-left DOM element (fallback)
+  if (!endTime) {
+    const timeEl = document.querySelector('.lot-time-left');
+    const timeText = timeEl ? timeEl.innerText.trim() : '';
+    if (timeText) {
+      let countdownSec = 0;
+      const dM = timeText.match(/(\d+)\s*d/); if (dM) countdownSec += parseInt(dM[1]) * 86400;
+      const hM = timeText.match(/(\d+)\s*h/); if (hM) countdownSec += parseInt(hM[1]) * 3600;
+      const mM = timeText.match(/(\d+)\s*m(?!a)/); if (mM) countdownSec += parseInt(mM[1]) * 60;
+      const sM = timeText.match(/(\d+)\s*s/); if (sM) countdownSec += parseInt(sM[1]);
+
+      const dashMatch = timeText.match(/-\s*(.+)/);
+      if (dashMatch) {
+        const dateStr = dashMatch[1].trim();
+        const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+        const dayTimeMatch = dateStr.match(/^(\w+)\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (dayTimeMatch) {
+          const dayName = dayTimeMatch[1].toLowerCase();
+          const dayIdx = days.indexOf(dayName);
+          let hours = parseInt(dayTimeMatch[2]);
+          const mins = parseInt(dayTimeMatch[3]);
+          const ampm = dayTimeMatch[4].toUpperCase();
+          if (ampm === 'PM' && hours !== 12) hours += 12;
+          if (ampm === 'AM' && hours === 12) hours = 0;
+          if (dayIdx !== -1) {
+            const now = new Date();
+            const todayIdx = now.getDay();
+            let daysAhead = dayIdx - todayIdx;
+            if (daysAhead < 0) daysAhead += 7;
+            if (daysAhead === 0) {
+              const candidate = new Date(now);
+              candidate.setHours(hours, mins, 0, 0);
+              if (candidate <= now) daysAhead = 7;
+            }
+            if (countdownSec > 0) {
+              const countdownDays = countdownSec / 86400;
+              while (daysAhead + 5 < countdownDays) daysAhead += 7;
+            }
+            const end = new Date(now);
+            end.setDate(end.getDate() + daysAhead);
+            end.setHours(hours, mins, 0, 0);
+            endTime = end.toISOString();
+          }
+        }
+        if (!endTime) {
+          const parsed = new Date(dateStr);
+          if (!isNaN(parsed.getTime())) endTime = parsed.toISOString();
+        }
+      }
+      if (!endTime && countdownSec > 0) {
+        endTime = new Date(Date.now() + countdownSec * 1000).toISOString();
       }
     }
   }
@@ -112,16 +150,45 @@
     document.head.appendChild(style);
   }
 
-  // ── Fetch auction houses then show Step 1 ──
-  fetch(APP + '/api/auction-houses')
-    .then(r => r.json())
-    .then(showStep1)
+  // ── Fetch auction houses + check if already queued, then show Step 1 ──
+  Promise.all([
+    fetch(APP + '/api/auction-houses').then(r => r.json()),
+    fetch(APP + '/api/snipes').then(r => r.json()),
+  ])
+    .then(([houses, snipes]) => {
+      // Check if this lot URL is already in the queue (active snipes only)
+      const currentUrl = window.location.href.split('?')[0].replace(/\/$/, '');
+      const existing = snipes.filter(s => {
+        const snipeUrl = (s.lot_url || '').split('?')[0].replace(/\/$/, '');
+        return snipeUrl === currentUrl && !['cancelled', 'lost', 'capped_out'].includes(s.status);
+      });
+      showStep1(houses, existing);
+    })
     .catch(() => alert('Cannot reach sniper app at ' + APP));
 
-  function showStep1(houses) {
+  function showStep1(houses, existingSnipes) {
     if (!houses.length) {
       alert('No auction houses configured! Add one in the app first: ' + APP);
       return;
+    }
+
+    // Build "already queued" banner if this lot is in the snipe list
+    let alreadyBanner = '';
+    if (existingSnipes && existingSnipes.length > 0) {
+      const items = existingSnipes.map(s => {
+        const statusColors = { scheduled: '#3b82f6', watching: '#eab308', bidding: '#f97316', won: '#22c55e', paused: '#eab308' };
+        const color = statusColors[s.status] || '#858993';
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">
+          <span>Snipe #${s.id} — cap ${money(s.max_cap)}</span>
+          <span style="color:${color};font-weight:700;text-transform:uppercase">${s.status}</span>
+        </div>`;
+      }).join('');
+      alreadyBanner = `
+        <div style="background:#1a3a1a;border:1px solid #2d5a2d;border-radius:8px;padding:10px 12px;margin-bottom:14px">
+          <div style="font-size:12px;font-weight:700;color:#22c55e;margin-bottom:4px">ALREADY IN QUEUE</div>
+          ${items}
+          <div style="font-size:11px;color:#858993;margin-top:4px">You can still add another snipe with a different cap if you want.</div>
+        </div>`;
     }
 
     const opts = houses.map((h, i) => {
@@ -135,28 +202,29 @@
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:999999;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,sans-serif';
 
     overlay.innerHTML = `
-      <div id="snipe-panel" style="background:#1a1a2e;color:#e0e0e0;border-radius:12px;padding:24px;max-width:480px;width:94%;box-shadow:0 8px 32px rgba(0,0,0,0.6);max-height:90vh;overflow-y:auto">
+      <div id="snipe-panel" style="background:#161921;color:#e4e2de;border-radius:12px;padding:24px;max-width:480px;width:94%;box-shadow:0 8px 32px rgba(0,0,0,0.6);max-height:90vh;overflow-y:auto">
         <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:4px">
-          <h2 style="margin:0;font-size:18px;color:#6c63ff">Analyze This Lot</h2>
-          <button id="snipe-close" style="background:none;border:none;color:#8888aa;font-size:20px;cursor:pointer;padding:0;line-height:1">&times;</button>
+          <h2 style="margin:0;font-size:18px;color:#d4a017">Analyze This Lot</h2>
+          <button id="snipe-close" style="background:none;border:none;color:#858993;font-size:20px;cursor:pointer;padding:0;line-height:1">&times;</button>
         </div>
-        <p style="margin:0 0 16px;font-size:13px;color:#8888aa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(title)}">${esc(title)}</p>
+        <p style="margin:0 0 16px;font-size:13px;color:#858993;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(title)}">${esc(title)}</p>
+        ${alreadyBanner}
 
         <div style="display:flex;gap:12px;margin-bottom:14px">
-          <div style="flex:1;background:#0a0a15;padding:10px;border-radius:8px;text-align:center">
-            <div style="font-size:10px;color:#8888aa;text-transform:uppercase;letter-spacing:0.05em">Current Bid</div>
-            <div style="font-size:18px;font-weight:700;color:#00c853">${money(currentBid)}</div>
+          <div style="flex:1;background:#0b0c10;padding:10px;border-radius:8px;text-align:center">
+            <div style="font-size:10px;color:#858993;text-transform:uppercase;letter-spacing:0.05em">Current Bid</div>
+            <div style="font-size:18px;font-weight:700;color:#22c55e">${money(currentBid)}</div>
           </div>
-          <div style="flex:1;background:#0a0a15;padding:10px;border-radius:8px;text-align:center">
-            <div style="font-size:10px;color:#8888aa;text-transform:uppercase;letter-spacing:0.05em">Increment</div>
+          <div style="flex:1;background:#0b0c10;padding:10px;border-radius:8px;text-align:center">
+            <div style="font-size:10px;color:#858993;text-transform:uppercase;letter-spacing:0.05em">Increment</div>
             <div style="font-size:18px;font-weight:700">${money(increment)}</div>
           </div>
         </div>
 
-        <label style="font-size:11px;color:#8888aa;text-transform:uppercase;display:block;margin-bottom:4px">Auction House</label>
-        <select id="snipe-house-sel" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #2a2a4a;background:#0a0a15;color:#e0e0e0;margin-bottom:16px;font-size:14px">${opts}</select>
+        <label style="font-size:11px;color:#858993;text-transform:uppercase;display:block;margin-bottom:4px">Auction House</label>
+        <select id="snipe-house-sel" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #252b35;background:#0b0c10;color:#e4e2de;margin-bottom:16px;font-size:14px">${opts}</select>
 
-        <button id="snipe-analyze-btn" style="width:100%;padding:12px;border:none;border-radius:6px;background:#6c63ff;color:#fff;cursor:pointer;font-weight:700;font-size:15px">Check Market Value</button>
+        <button id="snipe-analyze-btn" style="width:100%;padding:12px;border:none;border-radius:6px;background:#d4a017;color:#12100a;cursor:pointer;font-weight:700;font-size:15px">Check Market Value</button>
 
         <div id="snipe-analysis" style="display:none"></div>
       </div>
@@ -183,13 +251,13 @@
 
     const analysisDiv = document.getElementById('snipe-analysis');
     analysisDiv.style.display = 'block';
-    analysisDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#8888aa"><div style="display:inline-block;width:20px;height:20px;border:2px solid #6c63ff;border-top-color:transparent;border-radius:50%;animation:snipe-spin 0.8s linear infinite;vertical-align:middle;margin-right:8px"></div>Searching eBay...</div>';
+    analysisDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#858993"><div style="display:inline-block;width:20px;height:20px;border:2px solid #d4a017;border-top-color:transparent;border-radius:50%;animation:snipe-spin 0.8s linear infinite;vertical-align:middle;margin-right:8px"></div>Searching eBay...</div>';
 
     fetch(`${APP}/api/search-ebay?query=${encodeURIComponent(title)}`)
       .then(r => { if (!r.ok) throw new Error('Search failed'); return r.json(); })
       .then(ebay => showAnalysisResults(ebay, houseId, premium))
       .catch(e => {
-        analysisDiv.innerHTML = `<div style="color:#ff1744;padding:8px">Error: ${esc(e.message)}</div>`;
+        analysisDiv.innerHTML = `<div style="color:#ef4444;padding:8px">Error: ${esc(e.message)}</div>`;
         btn.disabled = false;
         btn.textContent = 'Retry';
         btn.style.opacity = '1';
@@ -213,16 +281,16 @@
       const label = hasSold ? 'eBay Sold' : 'eBay Market';
       ebayHtml = `
         <div style="display:flex;gap:8px;margin-bottom:10px">
-          <div style="flex:1;background:#0a0a15;padding:8px;border-radius:6px;text-align:center">
-            <div style="font-size:9px;color:#8888aa;text-transform:uppercase">${label} Low</div>
+          <div style="flex:1;background:#0b0c10;padding:8px;border-radius:6px;text-align:center">
+            <div style="font-size:9px;color:#858993;text-transform:uppercase">${label} Low</div>
             <div style="font-size:15px;font-weight:700">${money(data.low)}</div>
           </div>
-          <div style="flex:1;background:#0a0a15;padding:8px;border-radius:6px;text-align:center">
-            <div style="font-size:9px;color:#8888aa;text-transform:uppercase">${label} Avg</div>
-            <div style="font-size:15px;font-weight:700;color:#448aff">${money(data.avg)}</div>
+          <div style="flex:1;background:#0b0c10;padding:8px;border-radius:6px;text-align:center">
+            <div style="font-size:9px;color:#858993;text-transform:uppercase">${label} Avg</div>
+            <div style="font-size:15px;font-weight:700;color:#3b82f6">${money(data.avg)}</div>
           </div>
-          <div style="flex:1;background:#0a0a15;padding:8px;border-radius:6px;text-align:center">
-            <div style="font-size:9px;color:#8888aa;text-transform:uppercase">${label} High</div>
+          <div style="flex:1;background:#0b0c10;padding:8px;border-radius:6px;text-align:center">
+            <div style="font-size:9px;color:#858993;text-transform:uppercase">${label} High</div>
             <div style="font-size:15px;font-weight:700">${money(data.high)}</div>
           </div>
         </div>
@@ -231,50 +299,52 @@
       if (listings.length) {
         ebayHtml += '<div style="margin-bottom:10px">';
         listings.slice(0, 5).forEach(l => {
-          ebayHtml += `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;font-size:12px;border-bottom:1px solid #2a2a4a">
-            <a href="${esc(l.url)}" target="_blank" style="color:#6c63ff;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:8px">${esc(l.title)}</a>
+          ebayHtml += `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;font-size:12px;border-bottom:1px solid #252b35">
+            <a href="${esc(l.url)}" target="_blank" style="color:#d4a017;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:8px">${esc(l.title)}</a>
             <span style="font-weight:600;white-space:nowrap">${money(l.price)}</span>
           </div>`;
         });
         if (listings.length > 5) {
-          ebayHtml += `<div style="text-align:center;padding:4px;font-size:11px;color:#8888aa">+${listings.length - 5} more</div>`;
+          ebayHtml += `<div style="text-align:center;padding:4px;font-size:11px;color:#858993">+${listings.length - 5} more</div>`;
         }
         ebayHtml += '</div>';
       }
     } else {
-      ebayHtml = '<div style="text-align:center;padding:12px;color:#8888aa;background:#0a0a15;border-radius:6px;margin-bottom:10px">No eBay prices found automatically.</div>';
+      ebayHtml = '<div style="text-align:center;padding:12px;color:#858993;background:#0b0c10;border-radius:6px;margin-bottom:10px">No eBay prices found automatically.</div>';
     }
 
     // Search link buttons
+    // Sanitize URLs from API — only allow http/https
+    const safe = u => { if (!u) return '#'; try { const p = new URL(u); return ['http:', 'https:'].includes(p.protocol) ? u : '#'; } catch { return '#'; } };
     const searchLinks = `
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-        <a href="${ebay.active.search_url}" target="_blank" style="padding:4px 10px;border-radius:4px;background:#6c63ff;color:#fff;font-size:11px;font-weight:600;text-decoration:none">eBay Active</a>
-        <a href="${ebay.sold.search_url}" target="_blank" style="padding:4px 10px;border-radius:4px;background:#6c63ff;color:#fff;font-size:11px;font-weight:600;text-decoration:none">eBay Sold</a>
-        <a href="${ebay.amazon_url}" target="_blank" style="padding:4px 10px;border-radius:4px;background:#ff9900;color:#fff;font-size:11px;font-weight:600;text-decoration:none">Amazon</a>
-        ${ebay.kijiji_url ? `<a href="${ebay.kijiji_url}" target="_blank" style="padding:4px 10px;border-radius:4px;background:#373373;color:#fff;font-size:11px;font-weight:600;text-decoration:none">Kijiji</a>` : ''}
-        ${ebay.fb_marketplace_url ? `<a href="${ebay.fb_marketplace_url}" target="_blank" style="padding:4px 10px;border-radius:4px;background:#1877F2;color:#fff;font-size:11px;font-weight:600;text-decoration:none">FB Marketplace</a>` : ''}
+        <a href="${safe(ebay.active.search_url)}" target="_blank" rel="noopener" style="padding:4px 10px;border-radius:4px;background:#d4a017;color:#12100a;font-size:11px;font-weight:600;text-decoration:none">eBay Active</a>
+        <a href="${safe(ebay.sold.search_url)}" target="_blank" rel="noopener" style="padding:4px 10px;border-radius:4px;background:#d4a017;color:#12100a;font-size:11px;font-weight:600;text-decoration:none">eBay Sold</a>
+        <a href="${safe(ebay.amazon_url)}" target="_blank" rel="noopener" style="padding:4px 10px;border-radius:4px;background:#ff9900;color:#fff;font-size:11px;font-weight:600;text-decoration:none">Amazon</a>
+        ${ebay.kijiji_url ? `<a href="${safe(ebay.kijiji_url)}" target="_blank" rel="noopener" style="padding:4px 10px;border-radius:4px;background:#373373;color:#fff;font-size:11px;font-weight:600;text-decoration:none">Kijiji</a>` : ''}
+        ${ebay.fb_marketplace_url ? `<a href="${safe(ebay.fb_marketplace_url)}" target="_blank" rel="noopener" style="padding:4px 10px;border-radius:4px;background:#1877F2;color:#fff;font-size:11px;font-weight:600;text-decoration:none">FB Marketplace</a>` : ''}
       </div>
     `;
 
     analysisDiv.innerHTML = `
-      <div style="border-top:1px solid #2a2a4a;padding-top:16px;margin-top:16px">
+      <div style="border-top:1px solid #252b35;padding-top:16px;margin-top:16px">
         ${ebayHtml}
         ${searchLinks}
 
         <!-- Manual market value override -->
-        <div style="background:#16213e;border:1px solid #2a2a4a;border-radius:8px;padding:12px;margin-bottom:14px">
-          <label style="font-size:11px;color:#8888aa;text-transform:uppercase;display:block;margin-bottom:4px">Market Value ($) <span style="font-size:10px;text-transform:none">— ${ebayAvg ? 'auto-filled from eBay, edit if needed' : 'type what you found on Amazon/Kijiji/etc'}</span></label>
-          <input id="snipe-market-val" type="number" min="0" step="0.01" value="${ebayAvg || ''}" placeholder="e.g. 99.00 from Amazon" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #2a2a4a;background:#0a0a15;color:#e0e0e0;font-size:14px;box-sizing:border-box">
+        <div style="background:#1c2028;border:1px solid #252b35;border-radius:8px;padding:12px;margin-bottom:14px">
+          <label style="font-size:11px;color:#858993;text-transform:uppercase;display:block;margin-bottom:4px">Market Value ($) <span style="font-size:10px;text-transform:none">— ${ebayAvg ? 'auto-filled from eBay, edit if needed' : 'type what you found on Amazon/Kijiji/etc'}</span></label>
+          <input id="snipe-market-val" type="number" min="0" step="0.01" value="${ebayAvg || ''}" placeholder="e.g. 99.00 from Amazon" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #252b35;background:#0b0c10;color:#e4e2de;font-size:14px;box-sizing:border-box">
           <div id="cost-table" style="margin-top:10px"></div>
         </div>
 
         <!-- Step 2: Queue snipe -->
-        <div style="background:#16213e;border-radius:8px;padding:14px;border:1px solid #2a2a4a">
-          <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:#6c63ff">Queue a Snipe</div>
-          <label style="font-size:11px;color:#8888aa;text-transform:uppercase;display:block;margin-bottom:4px">Your Max Cap ($)</label>
-          <input id="snipe-cap-input" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #2a2a4a;background:#0a0a15;color:#e0e0e0;margin-bottom:8px;font-size:14px;box-sizing:border-box">
-          <div id="cap-preview" style="font-size:12px;color:#8888aa;margin-bottom:10px;min-height:18px"></div>
-          <button id="snipe-queue-btn" style="width:100%;padding:10px;border:none;border-radius:6px;background:#00c853;color:#fff;cursor:pointer;font-weight:700;font-size:14px">Queue Snipe</button>
+        <div style="background:#1c2028;border-radius:8px;padding:14px;border:1px solid #252b35">
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:#d4a017">Queue a Snipe</div>
+          <label style="font-size:11px;color:#858993;text-transform:uppercase;display:block;margin-bottom:4px">Your Max Cap ($)</label>
+          <input id="snipe-cap-input" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #252b35;background:#0b0c10;color:#e4e2de;margin-bottom:8px;font-size:14px;box-sizing:border-box">
+          <div id="cap-preview" style="font-size:12px;color:#858993;margin-bottom:10px;min-height:18px"></div>
+          <button id="snipe-queue-btn" style="width:100%;padding:10px;border:none;border-radius:6px;background:#22c55e;color:#12100a;cursor:pointer;font-weight:700;font-size:14px">Queue Snipe</button>
           <div id="snipe-confirm" style="display:none;text-align:center;padding:8px;margin-top:8px"></div>
         </div>
       </div>
@@ -301,23 +371,23 @@
       points.push(goodDealMax, fairMax);
       const unique = [...new Set(points.filter(p => p > 0))].sort((a, b) => a - b);
 
-      let html = '<div style="font-size:10px;color:#8888aa;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.05em">What different bids cost you</div>';
+      let html = '<div style="font-size:10px;color:#858993;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.05em">What different bids cost you</div>';
       unique.forEach(bid => {
         const total = bid * (1 + premium/100) * 1.13;
         const ratio = total / marketVal;
         let vText, vColor;
-        if (ratio <= 0.85) { vText = 'GOOD'; vColor = '#00c853'; }
-        else if (ratio <= 1.10) { vText = 'FAIR'; vColor = '#ffd600'; }
-        else { vText = 'OVER'; vColor = '#ff1744'; }
-        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #1a1a2e;font-size:12px">
+        if (ratio <= 0.85) { vText = 'GOOD'; vColor = '#22c55e'; }
+        else if (ratio <= 1.10) { vText = 'FAIR'; vColor = '#eab308'; }
+        else { vText = 'OVER'; vColor = '#ef4444'; }
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #161921;font-size:12px">
           <span>Bid ${money(bid)}</span>
-          <span style="color:#8888aa">&rarr; ${money(total)} true cost</span>
+          <span style="color:#858993">&rarr; ${money(total)} true cost</span>
           <span style="color:${vColor};font-weight:700;font-size:11px">${vText}</span>
         </div>`;
       });
       html += `<div style="padding:6px 0 0;font-size:12px;text-align:center">
-        Max bid for a good deal: <strong style="color:#00c853">${money(goodDealMax)}</strong>
-        &nbsp;&bull;&nbsp; Fair up to: <strong style="color:#ffd600">${money(fairMax)}</strong>
+        Max bid for a good deal: <strong style="color:#22c55e">${money(goodDealMax)}</strong>
+        &nbsp;&bull;&nbsp; Fair up to: <strong style="color:#eab308">${money(fairMax)}</strong>
       </div>`;
       costTable.innerHTML = html;
 
@@ -345,9 +415,9 @@
       let verdict = '', vColor = '';
       if (!isNaN(marketVal) && marketVal > 0) {
         const ratio = total / marketVal;
-        if (ratio <= 0.85) { verdict = ' — GOOD DEAL'; vColor = '#00c853'; }
-        else if (ratio <= 1.10) { verdict = ' — FAIR'; vColor = '#ffd600'; }
-        else { verdict = ' — OVERPRICED'; vColor = '#ff1744'; }
+        if (ratio <= 0.85) { verdict = ' — GOOD DEAL'; vColor = '#22c55e'; }
+        else if (ratio <= 1.10) { verdict = ' — FAIR'; vColor = '#eab308'; }
+        else { verdict = ' — OVERPRICED'; vColor = '#ef4444'; }
       }
       capPreview.innerHTML = `True cost: <strong>${money(total)}</strong>${verdict ? ` <span style="color:${vColor};font-weight:700">${verdict}</span>` : ''}`;
     };
@@ -388,7 +458,7 @@
     .then(data => {
       qBtn.style.display = 'none';
       document.getElementById('snipe-confirm').style.display = 'block';
-      document.getElementById('snipe-confirm').innerHTML = `<span style="color:#00c853;font-weight:700">Snipe #${data.id} queued</span><span style="color:#8888aa"> — watching at ${money(cap)} cap</span>`;
+      document.getElementById('snipe-confirm').innerHTML = `<span style="color:#22c55e;font-weight:700">Snipe #${data.id} queued</span><span style="color:#858993"> — watching at ${money(cap)} cap</span>`;
       document.getElementById('snipe-cap-input').disabled = true;
     })
     .catch(e => {

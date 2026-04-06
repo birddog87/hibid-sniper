@@ -38,6 +38,14 @@ def run_migrations(engine):
         _add_column_if_missing(conn, "auction_houses", "distance_km", "REAL")
         _add_column_if_missing(conn, "auction_houses", "drive_minutes", "REAL")
 
+        # Settings table - watchlist fields
+        _add_column_if_missing(conn, "settings", "watchlist_postal_code", "TEXT")
+        _add_column_if_missing(conn, "settings", "watchlist_radius_km", "INTEGER DEFAULT 50")
+
+        # Auction houses - always-include for watchlist (bypass radius)
+        _add_column_if_missing(conn, "auction_houses", "auctioneer_id", "INTEGER")
+        _add_column_if_missing(conn, "auction_houses", "always_include", "INTEGER DEFAULT 0")
+
 def ensure_settings(engine):
     from backend.models import Settings
     with Session(engine) as session:

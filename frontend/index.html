@@ -4,29 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HiBid Sniper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0f0f1a;
-  --bg-card:#1a1a2e;
-  --bg-card-alt:#16213e;
-  --bg-input:#0a0a15;
-  --border:#2a2a4a;
-  --text:#e0e0e0;
-  --text-dim:#8888aa;
-  --accent:#6c63ff;
-  --accent-hover:#7b73ff;
-  --green:#00c853;
-  --yellow:#ffd600;
-  --red:#ff1744;
-  --orange:#ff9100;
-  --blue:#448aff;
+  --font-heading:'Space Grotesk',system-ui,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --bg:#0d0f12;
+  --bg-card:#161921;
+  --bg-card-alt:#1c2028;
+  --bg-input:#0b0c10;
+  --border:#252b35;
+  --text:#e4e2de;
+  --text-dim:#858993;
+  --accent:#d4a017;
+  --accent-hover:#e6b020;
+  --green:#22c55e;
+  --yellow:#eab308;
+  --red:#ef4444;
+  --orange:#f97316;
+  --blue:#3b82f6;
   --radius:8px;
-  --shadow:0 2px 12px rgba(0,0,0,0.4);
+  --shadow:0 2px 12px rgba(0,0,0,0.5);
 }
-html{font-size:15px}
+html{font-size:16px}
 body{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;
+  font-family:var(--font-body);line-height:1.6;font-kerning:normal;
   background:var(--bg);color:var(--text);min-height:100vh;
 }
 a{color:var(--accent);text-decoration:none}
@@ -37,7 +42,7 @@ a:hover{text-decoration:underline}
   background:var(--bg-card);border-bottom:1px solid var(--border);
   padding:1rem 1.5rem;display:flex;align-items:center;gap:0.75rem;
 }
-.header h1{font-size:1.25rem;font-weight:700;letter-spacing:-0.02em}
+.header h1{font-size:1.25rem;font-weight:700;letter-spacing:-0.03em;font-family:var(--font-heading);line-height:1.2}
 .header .subtitle{color:var(--text-dim);font-size:0.8rem}
 
 /* Tabs */
@@ -48,11 +53,12 @@ a:hover{text-decoration:underline}
 .tab-btn{
   flex:1;min-width:0;padding:0.85rem 1rem;text-align:center;
   background:none;border:none;color:var(--text-dim);cursor:pointer;
-  font-size:0.85rem;font-weight:500;white-space:nowrap;
-  border-bottom:2px solid transparent;transition:all 0.2s;
+  font-size:0.875rem;font-weight:500;white-space:nowrap;font-family:var(--font-heading);
+  border-bottom:2px solid transparent;transition:color 0.2s,border-color 0.2s,background-color 0.2s;
 }
-.tab-btn:hover{color:var(--text);background:rgba(108,99,255,0.05)}
-.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(108,99,255,0.08)}
+.tab-btn:hover{color:var(--text);background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.tab-short{display:none}
 
 /* Content */
 .content{max-width:960px;margin:0 auto;padding:1rem}
@@ -65,27 +71,28 @@ a:hover{text-decoration:underline}
   border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;
   box-shadow:var(--shadow);
 }
-.card h2{font-size:1rem;margin-bottom:1rem;color:var(--text);font-weight:600}
+.card h2{font-size:1.125rem;margin-bottom:1rem;color:var(--text);font-weight:600;font-family:var(--font-heading);line-height:1.3}
 
 /* Forms */
 .form-row{display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.75rem}
 .form-group{display:flex;flex-direction:column;gap:0.3rem;flex:1;min-width:140px}
-.form-group label{font-size:0.75rem;color:var(--text-dim);font-weight:500;text-transform:uppercase;letter-spacing:0.04em}
-input,select{
+.form-group label{font-size:0.75rem;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;font-family:var(--font-heading)}
+input:not([type="checkbox"]),select{
   background:var(--bg-input);color:var(--text);border:1px solid var(--border);
   border-radius:6px;padding:0.6rem 0.75rem;font-size:0.9rem;
   transition:border-color 0.2s;width:100%;
 }
-input:focus,select:focus{outline:none;border-color:var(--accent)}
+input:not([type="checkbox"]):focus,select:focus{outline:none;border-color:var(--accent)}
 input::placeholder{color:var(--text-dim)}
+input[type="checkbox"]{width:auto;cursor:pointer}
 
 /* Buttons */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;
   padding:0.6rem 1.25rem;border:none;border-radius:6px;cursor:pointer;
-  font-size:0.85rem;font-weight:600;transition:all 0.15s;
+  font-size:0.875rem;font-weight:600;font-family:var(--font-heading);transition:opacity 0.15s,background-color 0.15s,filter 0.15s;
 }
-.btn-primary{background:var(--accent);color:#fff}
+.btn-primary{background:var(--accent);color:#12100a}
 .btn-primary:hover{background:var(--accent-hover)}
 .btn-primary:disabled{opacity:0.5;cursor:not-allowed}
 .btn-danger{background:var(--red);color:#fff;padding:0.35rem 0.75rem;font-size:0.78rem}
@@ -95,14 +102,15 @@ input::placeholder{color:var(--text-dim)}
 /* Badges */
 .badge{
   display:inline-block;padding:0.2rem 0.6rem;border-radius:99px;
-  font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;
+  font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;
+  font-family:var(--font-heading);
 }
-.badge-good{background:rgba(0,200,83,0.15);color:var(--green)}
+.badge-good{background:color-mix(in srgb,var(--green) 15%,transparent);color:var(--green)}
 
 /* Setup tab styles */
 .bookmarklet-link{
   display:inline-block;padding:0.6rem 1.25rem;border-radius:6px;
-  background:var(--accent);color:#fff;font-weight:600;font-size:0.85rem;
+  background:var(--accent);color:#12100a;font-weight:600;font-size:0.85rem;
   cursor:grab;text-decoration:none;
 }
 .bookmarklet-link:hover{background:var(--accent-hover);text-decoration:none}
@@ -114,19 +122,23 @@ input::placeholder{color:var(--text-dim)}
   font-family:monospace;font-size:0.8rem;resize:vertical;
 }
 .cookie-status{display:inline-block;padding:0.3rem 0.75rem;border-radius:99px;font-size:0.78rem;font-weight:600}
-.cookie-ok{background:rgba(0,200,83,0.15);color:var(--green)}
-.cookie-missing{background:rgba(255,23,68,0.15);color:var(--red)}
-.badge-fair{background:rgba(255,214,0,0.15);color:var(--yellow)}
-.badge-overpriced{background:rgba(255,23,68,0.15);color:var(--red)}
-.badge-unknown{background:rgba(136,136,170,0.15);color:var(--text-dim)}
-.badge-watching{background:rgba(68,138,255,0.15);color:var(--blue)}
-.badge-bidding{background:rgba(255,214,0,0.15);color:var(--yellow)}
-.badge-won{background:rgba(0,200,83,0.15);color:var(--green)}
-.badge-lost{background:rgba(255,23,68,0.15);color:var(--red)}
-.badge-capped_out{background:rgba(255,145,0,0.15);color:var(--orange)}
-.badge-scheduled{background:rgba(108,99,255,0.15);color:var(--accent)}
-.badge-paused{background:rgba(255,213,0,0.15);color:var(--yellow)}
-.badge-cancelled{background:rgba(136,136,170,0.15);color:var(--text-dim)}
+.cookie-ok{background:color-mix(in srgb,var(--green) 15%,transparent);color:var(--green)}
+.cookie-missing{background:color-mix(in srgb,var(--red) 15%,transparent);color:var(--red)}
+.badge-fair{background:color-mix(in srgb,var(--yellow) 15%,transparent);color:var(--yellow)}
+.badge-overpriced{background:color-mix(in srgb,var(--red) 15%,transparent);color:var(--red)}
+.badge-unknown{background:color-mix(in srgb,var(--text-dim) 15%,transparent);color:var(--text-dim)}
+.badge-watching{background:color-mix(in srgb,var(--blue) 15%,transparent);color:var(--blue)}
+.badge-bidding{background:color-mix(in srgb,var(--yellow) 15%,transparent);color:var(--yellow)}
+.badge-won{background:color-mix(in srgb,var(--green) 15%,transparent);color:var(--green)}
+.badge-lost{background:color-mix(in srgb,var(--red) 15%,transparent);color:var(--red)}
+.badge-capped_out{background:color-mix(in srgb,var(--orange) 15%,transparent);color:var(--orange)}
+.badge-scheduled{background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent)}
+.badge-paused{background:color-mix(in srgb,var(--yellow) 15%,transparent);color:var(--yellow)}
+.badge-cancelled{background:color-mix(in srgb,var(--text-dim) 15%,transparent);color:var(--text-dim)}
+.badge-new{background:var(--accent);color:#12100a;animation:badgePulse 1.5s ease 2}
+.badge-estimated{background:color-mix(in srgb,var(--orange) 18%,transparent);color:var(--orange)}
+.badge-live{background:color-mix(in srgb,var(--blue) 15%,transparent);color:var(--blue)}
+@keyframes badgePulse{0%,100%{opacity:1}50%{opacity:0.5}}
 
 /* Sortable table headers */
 .sortable{cursor:pointer;user-select:none;white-space:nowrap}
@@ -138,23 +150,24 @@ input::placeholder{color:var(--text-dim)}
 .cost-breakdown{display:grid;grid-template-columns:1fr auto;gap:0.25rem 1rem;font-size:0.9rem}
 .cost-breakdown .label{color:var(--text-dim)}
 .cost-breakdown .value{text-align:right;font-variant-numeric:tabular-nums}
-.cost-breakdown .total-label{font-weight:700;color:var(--text);font-size:1.05rem;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.35rem}
-.cost-breakdown .total-value{font-weight:700;color:var(--accent);font-size:1.05rem;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.35rem;text-align:right}
+.cost-breakdown .total-label{font-weight:700;color:var(--text);font-size:1.125rem;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.35rem;font-family:var(--font-heading)}
+.cost-breakdown .total-value{font-weight:700;color:var(--accent);font-size:1.125rem;padding-top:0.5rem;border-top:1px solid var(--border);margin-top:0.35rem;text-align:right;font-family:var(--font-heading)}
 .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin:0.75rem 0}
 .price-cell{text-align:center;padding:0.5rem;background:var(--bg);border-radius:6px}
-.price-cell .cell-label{font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;margin-bottom:0.2rem}
-.price-cell .cell-value{font-size:1rem;font-weight:600;font-variant-numeric:tabular-nums}
-.section-title{font-size:0.8rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;margin:1rem 0 0.5rem}
+.price-cell .cell-label{font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;margin-bottom:0.2rem;font-family:var(--font-heading);letter-spacing:0.04em}
+.price-cell .cell-value{font-size:1rem;font-weight:600;font-variant-numeric:tabular-nums;font-family:var(--font-heading)}
+.section-title{font-size:0.8rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin:1rem 0 0.5rem;font-family:var(--font-heading)}
 .links-row{display:flex;gap:1rem;margin:0.5rem 0}
 .verdict-box{text-align:center;margin-top:1rem;padding:1rem;background:var(--bg);border-radius:var(--radius)}
-.verdict-box .verdict-text{font-size:1.3rem;font-weight:700}
+.verdict-box .verdict-text{font-size:1.5rem;font-weight:700;font-family:var(--font-heading);letter-spacing:-0.02em;line-height:1.2}
 
 /* Tables */
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:0.85rem}
-th{text-align:left;padding:0.6rem 0.75rem;color:var(--text-dim);font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border)}
-td{padding:0.6rem 0.75rem;border-bottom:1px solid rgba(42,42,74,0.5);vertical-align:middle}
-tr:hover td{background:rgba(108,99,255,0.03)}
+#tab-snipes table{min-width:850px}
+th{text-align:left;padding:0.6rem 0.75rem;color:var(--text-dim);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border);font-family:var(--font-heading)}
+td{padding:0.6rem 0.75rem;border-bottom:1px solid color-mix(in srgb,var(--border) 50%,transparent);vertical-align:middle}
+tr:hover td{background:color-mix(in srgb,var(--accent) 3%,transparent)}
 
 /* Snipe row thumbnail */
 .snipe-thumb{width:48px;height:48px;object-fit:cover;border-radius:4px;background:var(--bg)}
@@ -186,7 +199,7 @@ tr:hover td{background:rgba(108,99,255,0.03)}
   padding:0.5rem 0.75rem;background:var(--bg);border-radius:6px;
   font-size:0.82rem;gap:0.75rem;transition:background 0.15s;
 }
-.listing-item:hover{background:rgba(108,99,255,0.08)}
+.listing-item:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
 .listing-title{
   flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   color:var(--accent);
@@ -204,12 +217,42 @@ tr:hover td{background:rgba(108,99,255,0.03)}
 /* Empty state */
 .empty{text-align:center;padding:2rem;color:var(--text-dim);font-size:0.9rem}
 
+/* Toast notification */
+.toast{position:fixed;top:1rem;right:1rem;background:var(--bg-card);border:1px solid var(--accent);border-radius:var(--radius);padding:0.75rem 1.25rem;color:var(--text);font-size:0.9rem;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.5);max-width:400px;animation:toastIn 0.3s ease}
+.toast-error{border-color:var(--red)}
+.toast-success{border-color:var(--green)}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.toast{cursor:pointer}
+
+/* Confirm dialog */
+.confirm-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.6);z-index:10000;
+  display:flex;align-items:center;justify-content:center;
+  animation:toastIn 0.15s ease;
+}
+.confirm-box{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1.5rem;max-width:400px;width:90%;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+.confirm-box p{margin-bottom:1.25rem;line-height:1.5}
+.confirm-actions{display:flex;gap:0.75rem;justify-content:flex-end}
+
+/* JWT expiry banner */
+.jwt-banner{
+  padding:0.5rem 1.5rem;font-size:0.85rem;font-weight:600;
+  font-family:var(--font-heading);text-align:center;display:none;
+}
+.jwt-banner.warn{background:color-mix(in srgb,var(--yellow) 20%,var(--bg-card));color:var(--yellow);border-bottom:1px solid var(--yellow)}
+.jwt-banner.danger{background:color-mix(in srgb,var(--red) 20%,var(--bg-card));color:var(--red);border-bottom:1px solid var(--red)}
+
 /* Budget bar */
 .budget-bar-wrap{
   background:var(--bg-card);border-bottom:1px solid var(--border);
   padding:0.6rem 1.5rem;display:flex;align-items:center;gap:1rem;
 }
-.budget-label{font-size:0.78rem;color:var(--text-dim);white-space:nowrap}
+.budget-label{font-size:0.75rem;color:var(--text-dim);white-space:nowrap;font-family:var(--font-heading);text-transform:uppercase;letter-spacing:0.04em}
 .budget-track{
   flex:1;height:8px;background:var(--bg-input);
   border-radius:99px;overflow:hidden;min-width:80px;
@@ -218,11 +261,12 @@ tr:hover td{background:rgba(108,99,255,0.03)}
 .budget-fill.green{background:var(--green)}
 .budget-fill.yellow{background:var(--yellow)}
 .budget-fill.red{background:var(--red)}
-.budget-text{font-size:0.82rem;font-weight:600;white-space:nowrap}
+.budget-text{font-size:0.875rem;font-weight:600;white-space:nowrap;font-family:var(--font-heading)}
 .btn-kill{
   background:var(--red);color:#fff;font-weight:700;
-  padding:0.4rem 1rem;font-size:0.82rem;border:none;
+  padding:0.4rem 1rem;font-size:0.875rem;border:none;
   border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;
+  font-family:var(--font-heading);
 }
 .btn-kill:hover{filter:brightness(1.2)}
 
@@ -235,62 +279,142 @@ tr:hover td{background:rgba(108,99,255,0.03)}
 /* Money format */
 .money::before{content:'$'}
 
-/* Responsive */
+/* Responsive — tablet */
+@media(max-width:768px){
+  /* Tab scroll: hide scrollbar, fade hint when more tabs off-screen */
+  .tabs{scrollbar-width:none;-ms-overflow-style:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs.scroll-hint{
+    -webkit-mask-image:linear-gradient(to right,black calc(100% - 40px),transparent);
+    mask-image:linear-gradient(to right,black calc(100% - 40px),transparent)
+  }
+  /* Budget bar wraps on narrow screens */
+  .budget-bar-wrap{flex-wrap:wrap;gap:0.5rem}
+  .btn-kill{width:100%;order:3;padding:0.6rem;font-size:0.85rem}
+  /* Touch targets: minimum 44px */
+  .btn-sm,.btn-danger{min-height:44px;padding:0.5rem 0.85rem;font-size:0.82rem}
+  /* Snipe table → card layout */
+  #tab-snipes table{min-width:0}
+  #tab-snipes .table-wrap thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  #tab-snipes .table-wrap tbody tr{
+    display:grid;grid-template-columns:48px 1fr minmax(80px,auto);gap:0.25rem 0.75rem;
+    padding:0.75rem;border:1px solid var(--border);border-radius:var(--radius);
+    margin-bottom:0.75rem;background:var(--bg);align-items:center
+  }
+  #tab-snipes .table-wrap td{padding:0;border:none}
+  #tab-snipes .table-wrap tbody tr:has(> .empty){display:block}
+  #tab-snipes .table-wrap td.empty{padding:2rem;text-align:center}
+  /* Thumb: col 1, row 1-2 */
+  #tab-snipes .table-wrap td:nth-child(1){grid-column:1;grid-row:1/3;align-self:start}
+  /* Title: col 2-3, row 1 */
+  #tab-snipes .table-wrap td:nth-child(2){grid-column:2/4;grid-row:1;min-width:0}
+  /* Current bid: col 2, row 2 */
+  #tab-snipes .table-wrap td:nth-child(3){grid-column:2;grid-row:2}
+  #tab-snipes .table-wrap td:nth-child(3)::before{content:'Bid: ';color:var(--text-dim);font-size:0.75rem}
+  /* Max cap: col 3, row 2 */
+  #tab-snipes .table-wrap td:nth-child(4){grid-column:3;grid-row:2;text-align:right}
+  #tab-snipes .table-wrap td:nth-child(4)::before{content:'Cap: ';color:var(--text-dim);font-size:0.75rem}
+  /* Ends: col 1-2, row 3 */
+  #tab-snipes .table-wrap td:nth-child(5){grid-column:1/3;grid-row:3;font-size:0.8rem}
+  /* Status: col 3, row 3 */
+  #tab-snipes .table-wrap td:nth-child(6){grid-column:3;grid-row:3;text-align:right}
+  /* Bid now: full width, row 4 */
+  #tab-snipes .table-wrap td:nth-child(7){grid-column:1/-1;grid-row:4}
+  #tab-snipes .table-wrap td:nth-child(7):empty{display:none}
+  /* Actions: full width, row 5 */
+  #tab-snipes .table-wrap td:nth-child(8){grid-column:1/-1;grid-row:5}
+  #tab-snipes .table-wrap td:nth-child(8) > div{justify-content:flex-start}
+}
+
+/* Responsive — mobile */
 @media(max-width:600px){
   .form-row{flex-direction:column}
   .form-group{min-width:100%}
   .price-grid{grid-template-columns:1fr}
   .tabs{gap:0}
   .tab-btn{padding:0.7rem 0.5rem;font-size:0.78rem}
-  html{font-size:14px}
+  .tab-full{display:none}
+  .tab-short{display:inline}
+  html{font-size:15px}
+  .budget-bar-wrap{padding:0.5rem 1rem}
+  .header{padding:0.75rem 1rem}
+  .content{padding:0.75rem}
+  /* Smaller thumbnails on phones */
+  #tab-snipes .table-wrap tbody tr{grid-template-columns:40px 1fr minmax(75px,auto)}
+  #tab-snipes .table-wrap .snipe-thumb{width:40px;height:40px}
+}
+
+/* Skip nav */
+.skip-nav{
+  position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;
+  z-index:100000;padding:0.75rem 1.5rem;background:var(--accent);color:#fff;
+  font-weight:700;font-size:0.9rem;border-radius:0 0 6px 0;text-decoration:none;
+}
+.skip-nav:focus{left:0;top:0;width:auto;height:auto}
+
+/* Focus indicators */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(108,99,255,0.3)}
+.tab-btn:focus-visible{outline-offset:-2px}
+.btn:focus-visible{outline-offset:1px}
+
+/* Screen reader only */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}
+
+/* Reduced motion */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important}
 }
 </style>
 </head>
 <body>
 
-<div class="header">
+<a href="#main-content" class="skip-nav">Skip to content</a>
+<header class="header" role="banner">
   <h1>HiBid Sniper</h1>
   <span class="subtitle">Deal analyzer &amp; auction sniper</span>
-</div>
+</header>
 
+<div id="jwt-banner" class="jwt-banner" role="alert"></div>
 <div class="budget-bar-wrap" id="budget-bar">
   <span class="budget-label">Spent:</span>
-  <div class="budget-track"><div class="budget-fill" id="budget-fill" style="width:0%"></div></div>
+  <div class="budget-track"><div class="budget-fill" id="budget-fill" style="width:0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Budget spent"></div></div>
   <span class="budget-text" id="budget-text">Loading...</span>
-  <button class="btn-kill" onclick="killAllSnipes()">STOP ALL SNIPES</button>
+  <button class="btn-kill" onclick="killAllSnipes()" aria-label="Stop all active snipes">STOP ALL SNIPES</button>
 </div>
 <div class="budget-bar-wrap" style="padding-top:0;border-bottom:1px solid var(--border)">
   <span class="budget-label">If you win:</span>
-  <div class="budget-track"><div class="budget-fill" id="exposure-fill" style="width:0%"></div></div>
+  <div class="budget-track"><div class="budget-fill" id="exposure-fill" style="width:0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Exposure if all bids win"></div></div>
   <span class="budget-text" id="exposure-text">—</span>
 </div>
 
-<nav class="tabs">
-  <button class="tab-btn active" data-tab="analyzer">Deal Analyzer</button>
-  <button class="tab-btn" data-tab="snipes">Snipe Queue</button>
-  <button class="tab-btn" data-tab="houses">Auction Houses</button>
-  <button class="tab-btn" data-tab="history">History</button>
-  <button class="tab-btn" data-tab="setup">Setup</button>
-  <button class="tab-btn" data-tab="activity">Activity Log</button>
+<nav class="tabs" role="tablist" aria-label="Main navigation">
+  <button class="tab-btn active" data-tab="analyzer" role="tab" aria-selected="true" aria-controls="tab-analyzer" id="tab-btn-analyzer" tabindex="0"><span class="tab-full">Deal Analyzer</span><span class="tab-short">Deals</span></button>
+  <button class="tab-btn" data-tab="snipes" role="tab" aria-selected="false" aria-controls="tab-snipes" id="tab-btn-snipes" tabindex="-1"><span class="tab-full">Snipe Queue</span><span class="tab-short">Snipes</span></button>
+  <button class="tab-btn" data-tab="houses" role="tab" aria-selected="false" aria-controls="tab-houses" id="tab-btn-houses" tabindex="-1"><span class="tab-full">Auction Houses</span><span class="tab-short">Houses</span></button>
+  <button class="tab-btn" data-tab="history" role="tab" aria-selected="false" aria-controls="tab-history" id="tab-btn-history" tabindex="-1">History</button>
+  <button class="tab-btn" data-tab="setup" role="tab" aria-selected="false" aria-controls="tab-setup" id="tab-btn-setup" tabindex="-1">Setup</button>
+  <button class="tab-btn" data-tab="activity" role="tab" aria-selected="false" aria-controls="tab-activity" id="tab-btn-activity" tabindex="-1"><span class="tab-full">Activity Log</span><span class="tab-short">Activity</span></button>
+  <button class="tab-btn" data-tab="watchlist" role="tab" aria-selected="false" aria-controls="tab-watchlist" id="tab-btn-watchlist" tabindex="-1">Watchlist</button>
 </nav>
 
-<div class="content">
+<main class="content" id="main-content">
 
   <!-- TAB 1: Deal Analyzer -->
-  <div id="tab-analyzer" class="tab-panel active">
+  <div id="tab-analyzer" class="tab-panel active" role="tabpanel" aria-labelledby="tab-btn-analyzer">
     <div class="card">
       <h2>Analyze a Deal</h2>
       <div class="form-row">
         <div class="form-group" style="flex:2">
-          <label>Item Name</label>
+          <label for="deal-item">Item Name</label>
           <input type="text" id="deal-item" placeholder="e.g. Milwaukee M18 Impact Driver">
         </div>
         <div class="form-group">
-          <label>Your Bid ($)</label>
+          <label for="deal-bid">Your Bid ($)</label>
           <input type="number" id="deal-bid" placeholder="0.00" min="0" step="0.01">
         </div>
         <div class="form-group">
-          <label>Auction House</label>
+          <label for="deal-house">Auction House</label>
           <select id="deal-house"><option value="">Loading...</option></select>
         </div>
       </div>
@@ -329,20 +453,20 @@ tr:hover td{background:rgba(108,99,255,0.03)}
   </div>
 
   <!-- TAB 2: Snipe Queue -->
-  <div id="tab-snipes" class="tab-panel">
+  <div id="tab-snipes" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-snipes">
     <div class="card">
       <h2>Queue a Snipe</h2>
       <div class="form-row">
         <div class="form-group" style="flex:2">
-          <label>HiBid Lot URL</label>
+          <label for="snipe-url">HiBid Lot URL</label>
           <input type="text" id="snipe-url" placeholder="https://hibid.com/lot/...">
         </div>
         <div class="form-group">
-          <label>Max Cap ($)</label>
+          <label for="snipe-cap">Max Cap ($)</label>
           <input type="number" id="snipe-cap" placeholder="0.00" min="0" step="0.01">
         </div>
         <div class="form-group">
-          <label>Auction House</label>
+          <label for="snipe-house">Auction House</label>
           <select id="snipe-house"><option value="">Loading...</option></select>
         </div>
       </div>
@@ -352,23 +476,27 @@ tr:hover td{background:rgba(108,99,255,0.03)}
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <h2 style="margin:0">Active Snipes</h2>
         <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" onclick="refreshSnipeTimes()" style="background:var(--blue);color:#fff;font-size:0.8rem;padding:4px 10px">Refresh Times</button>
           <button class="btn btn-sm" onclick="pauseAllSnipes()" style="background:var(--yellow);color:#000;font-size:0.8rem;padding:4px 10px">Pause All</button>
           <button class="btn btn-sm" onclick="resumeAllSnipes()" style="background:var(--green);color:#000;font-size:0.8rem;padding:4px 10px">Resume All</button>
           <button class="btn btn-sm" id="btn-reset-sort" onclick="resetSnipeSort()" style="background:var(--border);color:var(--text);font-size:0.8rem;padding:4px 10px;display:none">Reset Sort</button>
         </div>
       </div>
+      <div style="color:var(--text-dim);font-size:0.78rem;margin:0.4rem 0 0.8rem">
+        End times are approximate when queued from HiBid. Use <strong>Refresh Times</strong> to resync them from the live lot page.
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th></th>
-              <th class="sortable" onclick="sortSnipes('title')">Title <span id="sort-ind-title"></span></th>
-              <th class="sortable" onclick="sortSnipes('current_bid')">Current Bid <span id="sort-ind-current_bid"></span></th>
-              <th class="sortable" onclick="sortSnipes('max_cap')">Max Cap <span id="sort-ind-max_cap"></span></th>
-              <th class="sortable" onclick="sortSnipes('end_time')" title="Approximate — captured when snipe was queued">Ends ~ <span id="sort-ind-end_time"></span></th>
-              <th class="sortable" onclick="sortSnipes('status')">Status <span id="sort-ind-status"></span></th>
-              <th>Bid Now</th>
-              <th></th>
+              <th scope="col"><span class="sr-only">Thumbnail</span></th>
+              <th scope="col" class="sortable" onclick="sortSnipes('title')" role="button" aria-sort="none" id="sort-th-title">Title <span id="sort-ind-title"></span></th>
+              <th scope="col" class="sortable" onclick="sortSnipes('current_bid')" role="button" aria-sort="none" id="sort-th-current_bid">Current Bid <span id="sort-ind-current_bid"></span></th>
+              <th scope="col" class="sortable" onclick="sortSnipes('max_cap')" role="button" aria-sort="none" id="sort-th-max_cap">Max Cap <span id="sort-ind-max_cap"></span></th>
+              <th scope="col" class="sortable" onclick="sortSnipes('end_time')" title="Approximate — captured when snipe was queued" role="button" aria-sort="none" id="sort-th-end_time">Ends ~ <span id="sort-ind-end_time"></span></th>
+              <th scope="col" class="sortable" onclick="sortSnipes('status')" role="button" aria-sort="none" id="sort-th-status">Status <span id="sort-ind-status"></span></th>
+              <th scope="col">Bid Now</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody id="snipes-tbody">
@@ -380,35 +508,45 @@ tr:hover td{background:rgba(108,99,255,0.03)}
   </div>
 
   <!-- TAB 3: Auction Houses -->
-  <div id="tab-houses" class="tab-panel">
+  <div id="tab-houses" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-houses">
     <div class="card">
       <h2>Add Auction House</h2>
       <div class="form-row">
         <div class="form-group" style="flex:2">
-          <label>Name</label>
+          <label for="house-name">Name</label>
           <input type="text" id="house-name" placeholder="e.g. Walters Auctions">
         </div>
         <div class="form-group">
-          <label>Buyer's Premium %</label>
+          <label for="house-premium">Buyer's Premium %</label>
           <input type="number" id="house-premium" placeholder="18" min="0" step="0.1">
         </div>
         <div class="form-group">
-          <label>Per-Item Fee ($)</label>
+          <label for="house-item-fee">Per-Item Fee ($)</label>
           <input type="number" id="house-item-fee" placeholder="0" min="0" step="0.25">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group" style="flex:2">
-          <label>Address <span style="color:var(--text-dim);font-size:0.75rem">(optional — auto-calculates distance)</span></label>
+          <label for="house-address">Address <span style="color:var(--text-dim);font-size:0.75rem">(optional — auto-calculates distance)</span></label>
           <input type="text" id="house-address" placeholder="e.g. 2040 Appleby Line, Burlington, ON">
         </div>
         <div class="form-group">
-          <label>Distance (km)</label>
+          <label for="house-distance">Distance (km)</label>
           <input type="number" id="house-distance" placeholder="auto" min="0" step="0.1">
         </div>
         <div class="form-group">
-          <label>Drive Time (min)</label>
+          <label for="house-drive-time">Drive Time (min)</label>
           <input type="number" id="house-drive-time" placeholder="auto" min="0" step="1">
+        </div>
+      </div>
+      <div class="form-row" style="align-items:center">
+        <div class="form-group">
+          <label for="house-auctioneer-id">HiBid Auctioneer ID <span style="color:var(--text-dim);font-size:0.75rem">(auto-filled from watchlist)</span></label>
+          <input type="number" id="house-auctioneer-id" placeholder="e.g. 12345" min="1" step="1">
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:8px;padding-top:18px">
+          <input type="checkbox" id="house-always-include" style="width:auto">
+          <label for="house-always-include" style="margin:0;cursor:pointer">Always include in watchlist <span style="color:var(--text-dim);font-size:0.75rem">(bypass radius — e.g. delivers to you)</span></label>
         </div>
       </div>
       <button class="btn btn-primary" onclick="addHouse()">Add House</button>
@@ -420,7 +558,36 @@ tr:hover td{background:rgba(108,99,255,0.03)}
   </div>
 
   <!-- TAB 4: History -->
-  <div id="tab-history" class="tab-panel">
+  <div id="tab-history" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-history">
+    <div class="card">
+      <h2>Past Snipes</h2>
+      <div id="history-stats" style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap"></div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+        <div id="history-filters" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        <input type="text" id="history-search" placeholder="Search items..." oninput="renderHistorySnipes()"
+          style="padding:6px 10px;font-size:0.8rem;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;width:180px;margin-left:auto">
+        <button class="btn btn-sm" id="btn-reset-hist-sort" style="display:none;font-size:0.7rem" onclick="resetHistorySort()">Reset sort</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th class="sortable" onclick="sortHistory('title')" id="hsort-th-title">Item <span id="hsort-ind-title"></span></th>
+              <th class="sortable" onclick="sortHistory('our_bid')" id="hsort-th-our_bid">Our Bid <span id="hsort-ind-our_bid"></span></th>
+              <th class="sortable" onclick="sortHistory('sold')" id="hsort-th-sold">Sold For <span id="hsort-ind-sold"></span></th>
+              <th class="sortable" onclick="sortHistory('true_cost')" id="hsort-th-true_cost">True Cost <span id="hsort-ind-true_cost"></span></th>
+              <th class="sortable" onclick="sortHistory('cap')" id="hsort-th-cap">Cap <span id="hsort-ind-cap"></span></th>
+              <th class="sortable" onclick="sortHistory('status')" id="hsort-th-status">Status <span id="hsort-ind-status"></span></th>
+              <th class="sortable" onclick="sortHistory('ended')" id="hsort-th-ended">Ended <span id="hsort-ind-ended"></span></th>
+            </tr>
+          </thead>
+          <tbody id="history-snipes">
+            <tr><td colspan="8" class="empty">No past snipes yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
     <div class="card">
       <h2>Deal Checks</h2>
       <div class="table-wrap">
@@ -441,29 +608,10 @@ tr:hover td{background:rgba(108,99,255,0.03)}
         </table>
       </div>
     </div>
-    <div class="card">
-      <h2>Past Snipes</h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Max Cap</th>
-              <th>Final Bid</th>
-              <th>Status</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody id="history-snipes">
-            <tr><td colspan="5" class="empty">No past snipes yet</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
   </div>
 
   <!-- TAB 6: Activity Log -->
-  <div id="tab-activity" class="tab-panel">
+  <div id="tab-activity" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-activity">
     <div class="card">
       <h2>Bid Activity</h2>
       <div class="table-wrap">
@@ -486,7 +634,7 @@ tr:hover td{background:rgba(108,99,255,0.03)}
   </div>
 
   <!-- TAB 5: Setup -->
-  <div id="tab-setup" class="tab-panel">
+  <div id="tab-setup" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-setup">
     <div class="card" style="border-left:3px solid var(--red)">
       <h2>Safety Budget</h2>
       <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:0.75rem">
@@ -495,11 +643,11 @@ tr:hover td{background:rgba(108,99,255,0.03)}
       </p>
       <div class="form-row">
         <div class="form-group">
-          <label>Global Spend Cap ($)</label>
+          <label for="settings-global-cap">Global Spend Cap ($)</label>
           <input type="number" id="settings-global-cap" placeholder="e.g. 500" min="0" step="1">
         </div>
         <div class="form-group">
-          <label>Max Single Snipe Cap ($)</label>
+          <label for="settings-single-cap">Max Single Snipe Cap ($)</label>
           <input type="number" id="settings-single-cap" placeholder="e.g. 200" min="0" step="1">
         </div>
       </div>
@@ -514,17 +662,17 @@ tr:hover td{background:rgba(108,99,255,0.03)}
       </p>
       <div class="form-row">
         <div class="form-group" style="flex:2">
-          <label>Home Address</label>
+          <label for="settings-home-address">Home Address</label>
           <input type="text" id="settings-home-address" placeholder="e.g. 123 Main St, Burlington, ON">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Gas Price ($/L)</label>
+          <label for="settings-gas-price">Gas Price ($/L)</label>
           <input type="number" id="settings-gas-price" placeholder="1.80" min="0" step="0.01">
         </div>
         <div class="form-group">
-          <label>Fuel Consumption (L/100km)</label>
+          <label for="settings-fuel">Fuel Consumption (L/100km)</label>
           <input type="number" id="settings-fuel" placeholder="11.6" min="0" step="0.1">
         </div>
       </div>
@@ -583,7 +731,52 @@ tr:hover td{background:rgba(108,99,255,0.03)}
     </div>
   </div>
 
-</div>
+  <!-- TAB: Watchlist -->
+  <div id="tab-watchlist" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-watchlist">
+    <div class="card">
+      <h2>Watchlist Settings</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="wl-postal">Postal Code</label>
+          <input type="text" id="wl-postal" placeholder="e.g. L7L 1B2" style="width:140px">
+        </div>
+        <div class="form-group">
+          <label for="wl-radius">Radius (km)</label>
+          <input type="number" id="wl-radius" value="50" min="5" max="500" style="width:100px">
+        </div>
+        <div class="form-group" style="align-self:flex-end">
+          <button class="btn btn-primary btn-sm" onclick="saveWatchlistSettings()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Saved Searches</h2>
+      <p style="color:var(--text-dim);font-size:0.8rem;margin-bottom:0.5rem">
+        Use commas for variants: <code style="color:var(--accent)">cx9, cx-9, mazda cx 9</code> searches all and groups results together.
+      </p>
+      <div class="form-row" style="margin-bottom:0.75rem">
+        <input type="text" id="wl-new-term" placeholder="e.g. nvidia shield" style="flex:1">
+        <button class="btn btn-primary btn-sm" onclick="addWatchlistSearch()">+ Add</button>
+      </div>
+      <div id="wl-searches-list" style="margin-bottom:0.75rem">
+        <span class="empty">No saved searches yet</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <button class="btn btn-primary" onclick="triggerWatchlistScan()" id="wl-scan-btn">Scan Now</button>
+        <span id="wl-scan-status" style="color:var(--text-dim);font-size:0.85rem"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Results</h2>
+      <div id="wl-results">
+        <p class="empty">No results yet. Add some searches and click Scan Now.</p>
+      </div>
+    </div>
+  </div>
+
+</main>
 
 <script>
 /* ── Helpers ── */
@@ -643,8 +836,10 @@ async function api(url, opts = {}) {
     ...opts,
   });
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err || res.statusText);
+    const raw = await res.text();
+    let msg = raw || res.statusText;
+    try { const j = JSON.parse(raw); if (j.detail) msg = j.detail; } catch {}
+    throw new Error(msg);
   }
   return res.json();
 }
@@ -656,9 +851,11 @@ let snipeRefreshTimer = null;
 /* ── Tab switching ── */
 $$('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    $$('.tab-btn').forEach(b => b.classList.remove('active'));
+    $$('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); b.setAttribute('tabindex', '-1'); });
     $$('.tab-panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+    btn.setAttribute('tabindex', '0');
     $(`#tab-${btn.dataset.tab}`).classList.add('active');
 
     if (btn.dataset.tab === 'snipes') startSnipeRefresh();
@@ -668,6 +865,17 @@ $$('.tab-btn').forEach(btn => {
     if (btn.dataset.tab === 'history') loadHistory();
     if (btn.dataset.tab === 'setup') { checkCookieStatus(); loadSettings(); }
     if (btn.dataset.tab === 'activity') loadActivityLog();
+    if (btn.dataset.tab === 'watchlist') loadWatchlist();
+  });
+  btn.addEventListener('keydown', (e) => {
+    const tabs = [...$$('.tab-btn')];
+    const idx = tabs.indexOf(btn);
+    let target = null;
+    if (e.key === 'ArrowRight') target = tabs[(idx + 1) % tabs.length];
+    else if (e.key === 'ArrowLeft') target = tabs[(idx - 1 + tabs.length) % tabs.length];
+    else if (e.key === 'Home') target = tabs[0];
+    else if (e.key === 'End') target = tabs[tabs.length - 1];
+    if (target) { e.preventDefault(); target.click(); target.focus(); }
   });
 });
 
@@ -698,10 +906,11 @@ function renderHousesList() {
       driveInfo = `<span style="color:var(--text-dim);font-size:0.8rem;display:block;margin-top:2px">${parts.join(' · ')}</span>`;
     }
     const addrInfo = h.address ? `<span style="color:var(--text-dim);font-size:0.8rem;display:block">${esc(h.address)}</span>` : '';
+    const alwaysBadge = h.always_include ? `<span style="background:var(--accent);color:#fff;font-size:0.7rem;padding:1px 6px;border-radius:4px;margin-left:6px">ALWAYS INCLUDE</span>` : '';
     return `
     <div class="house-item" id="house-row-${h.id}">
       <div class="house-info">
-        <span class="house-name">${esc(h.name)}</span>
+        <span class="house-name">${esc(h.name)}${alwaysBadge}</span>
         <span class="house-premium">${h.premium_pct}% buyer's premium${h.per_item_fee ? ` + $${h.per_item_fee.toFixed(2)}/item` : ''}</span>
         ${addrInfo}${driveInfo}
       </div>
@@ -730,15 +939,17 @@ function populateHouseDropdowns() {
 async function addHouse() {
   const name = $('#house-name').value.trim();
   const premium = parseFloat($('#house-premium').value);
-  if (!name || isNaN(premium)) return alert('Fill in name and premium %');
+  if (!name || isNaN(premium)) return showToast('Fill in name and premium %', 'error');
   const perItemFee = parseFloat($('#house-item-fee').value) || 0;
   const address = $('#house-address').value.trim() || null;
   const distance = parseFloat($('#house-distance').value) || null;
   const driveTime = parseFloat($('#house-drive-time').value) || null;
+  const auctioneerId = parseInt($('#house-auctioneer-id').value) || null;
+  const alwaysInclude = $('#house-always-include').checked;
   try {
     await api('/api/auction-houses', {
       method: 'POST',
-      body: JSON.stringify({name, premium_pct: premium, per_item_fee: perItemFee, address, distance_km: distance, drive_minutes: driveTime}),
+      body: JSON.stringify({name, premium_pct: premium, per_item_fee: perItemFee, address, distance_km: distance, drive_minutes: driveTime, auctioneer_id: auctioneerId, always_include: alwaysInclude}),
     });
     $('#house-name').value = '';
     $('#house-premium').value = '';
@@ -746,9 +957,11 @@ async function addHouse() {
     $('#house-address').value = '';
     $('#house-distance').value = '';
     $('#house-drive-time').value = '';
+    $('#house-auctioneer-id').value = '';
+    $('#house-always-include').checked = false;
     await loadHouses();
   } catch (e) {
-    alert('Error: ' + e.message);
+    showToast(e.message, 'error');
   }
 }
 
@@ -768,6 +981,13 @@ function editHouse(id) {
         <input id="eh-distance-${id}" type="number" value="${h.distance_km || ''}" placeholder="km (auto)" step="0.1" style="width:80px">
         <input id="eh-drive-${id}" type="number" value="${h.drive_minutes || ''}" placeholder="min (auto)" step="1" style="width:80px">
       </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input id="eh-auctioneer-${id}" type="number" value="${h.auctioneer_id || ''}" placeholder="Auctioneer ID" step="1" style="width:120px" title="HiBid Auctioneer ID">
+        <label style="display:flex;align-items:center;gap:4px;font-size:0.85rem;cursor:pointer;margin:0">
+          <input id="eh-always-${id}" type="checkbox" ${h.always_include ? 'checked' : ''} style="width:auto">
+          Always include (bypass radius)
+        </label>
+      </div>
     </div>
     <div style="display:flex;gap:6px;align-items:flex-start">
       <button class="btn btn-sm" style="background:var(--green)" onclick="saveHouse(${id})">Save</button>
@@ -779,29 +999,31 @@ function editHouse(id) {
 async function saveHouse(id) {
   const name = document.getElementById('eh-name-' + id).value.trim();
   const premium = parseFloat(document.getElementById('eh-premium-' + id).value);
-  if (!name || isNaN(premium)) return alert('Name and premium % are required');
+  if (!name || isNaN(premium)) return showToast('Name and premium % are required', 'error');
   const perItemFee = parseFloat(document.getElementById('eh-fee-' + id).value) || 0;
   const address = document.getElementById('eh-address-' + id).value.trim() || null;
   const distance = parseFloat(document.getElementById('eh-distance-' + id).value) || null;
   const driveTime = parseFloat(document.getElementById('eh-drive-' + id).value) || null;
+  const auctioneerId = parseInt(document.getElementById('eh-auctioneer-' + id).value) || null;
+  const alwaysInclude = document.getElementById('eh-always-' + id).checked;
   try {
     await api(`/api/auction-houses/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({name, premium_pct: premium, per_item_fee: perItemFee, address, distance_km: distance, drive_minutes: driveTime}),
+      body: JSON.stringify({name, premium_pct: premium, per_item_fee: perItemFee, address, distance_km: distance, drive_minutes: driveTime, auctioneer_id: auctioneerId, always_include: alwaysInclude}),
     });
     await loadHouses();
   } catch (e) {
-    alert('Error: ' + e.message);
+    showToast(e.message, 'error');
   }
 }
 
 async function deleteHouse(id) {
-  if (!confirm('Delete this auction house?')) return;
+  if (!await confirmAction('Delete this auction house?', {confirmText: 'Delete'})) return;
   try {
     await api(`/api/auction-houses/${id}`, {method: 'DELETE'});
     await loadHouses();
   } catch (e) {
-    alert('Error: ' + e.message);
+    showToast(e.message, 'error');
   }
 }
 
@@ -811,9 +1033,9 @@ async function analyzeDeal() {
   const bid = parseFloat($('#deal-bid').value);
   const houseId = parseInt($('#deal-house').value);
 
-  if (!item) return alert('Enter an item name');
-  if (isNaN(bid) || bid <= 0) return alert('Enter a valid bid price');
-  if (isNaN(houseId)) return alert('Select an auction house');
+  if (!item) return showToast('Enter an item name', 'error');
+  if (isNaN(bid) || bid <= 0) return showToast('Enter a valid bid price', 'error');
+  if (isNaN(houseId)) return showToast('Select an auction house', 'error');
 
   const btn = $('#btn-analyze');
   btn.disabled = true;
@@ -826,7 +1048,7 @@ async function analyzeDeal() {
     });
     renderDealResults(data, item);
   } catch (e) {
-    alert('Analysis failed: ' + e.message);
+    showToast('Analysis failed: ' + e.message, 'error');
   } finally {
     btn.disabled = false;
     $('#deal-loading').style.display = 'none';
@@ -873,11 +1095,11 @@ function renderDealResults(data, item) {
 
   // Search buttons
   $('#search-links').innerHTML = `
-    <a href="${ebay.sold.search_url}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none">eBay Sold</a>
-    <a href="${ebay.active.search_url}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none">eBay Active</a>
-    <a href="${ebay.amazon_url}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none;background:#ff9900">Amazon</a>
-    ${ebay.kijiji_url ? `<a href="${ebay.kijiji_url}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none;background:#373373">Kijiji</a>` : ''}
-    ${ebay.fb_marketplace_url ? `<a href="${ebay.fb_marketplace_url}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none;background:#1877F2">FB Marketplace</a>` : ''}
+    <a href="${safeUrl(ebay.sold.search_url)}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none">eBay Sold</a>
+    <a href="${safeUrl(ebay.active.search_url)}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none">eBay Active</a>
+    <a href="${safeUrl(ebay.amazon_url)}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none;background:#ff9900">Amazon</a>
+    ${ebay.kijiji_url ? `<a href="${safeUrl(ebay.kijiji_url)}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none;background:#373373">Kijiji</a>` : ''}
+    ${ebay.fb_marketplace_url ? `<a href="${safeUrl(ebay.fb_marketplace_url)}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none;background:#1877F2">FB Marketplace</a>` : ''}
   `;
 
   // Verdict
@@ -951,9 +1173,9 @@ async function queueSnipe() {
   const cap = parseFloat($('#snipe-cap').value);
   const houseId = parseInt($('#snipe-house').value);
 
-  if (!url) return alert('Enter a HiBid lot URL');
-  if (isNaN(cap) || cap <= 0) return alert('Enter a valid max cap');
-  if (isNaN(houseId)) return alert('Select an auction house');
+  if (!url) return showToast('Enter a HiBid lot URL', 'error');
+  if (isNaN(cap) || cap <= 0) return showToast('Enter a valid max cap', 'error');
+  if (isNaN(houseId)) return showToast('Select an auction house', 'error');
 
   const btn = $('#btn-snipe');
   btn.disabled = true;
@@ -967,13 +1189,14 @@ async function queueSnipe() {
     await loadSnipes();
     await refreshBudget();
   } catch (e) {
-    alert('Error: ' + e.message);
+    showToast(e.message, 'error');
   } finally {
     btn.disabled = false;
   }
 }
 
 let _snipesData = [];
+let _snipesLoaded = false;
 let _snipeSort = { key: null, dir: 'asc' };
 
 function sortSnipes(key) {
@@ -996,7 +1219,19 @@ function resetSnipeSort() {
 function _sortedSnipes() {
   const data = [..._snipesData];
   const { key, dir } = _snipeSort;
-  if (!key) return data; // default: insertion order (by id)
+  if (!key) {
+    // Default: active snipes first (by ending soonest), then finished snipes at the bottom
+    const active = ['scheduled','watching','bidding','paused'];
+    data.sort((a, b) => {
+      const aActive = active.includes(a.status) ? 0 : 1;
+      const bActive = active.includes(b.status) ? 0 : 1;
+      if (aActive !== bActive) return aActive - bActive;
+      const ta = a.end_time ? new Date(a.end_time).getTime() : Infinity;
+      const tb = b.end_time ? new Date(b.end_time).getTime() : Infinity;
+      return ta - tb;
+    });
+    return data;
+  }
 
   const statusOrder = ['bidding','watching','scheduled','paused','won','lost','capped_out','cancelled'];
   data.sort((a, b) => {
@@ -1026,7 +1261,9 @@ function _sortedSnipes() {
 function _updateSortIndicators() {
   ['title','current_bid','max_cap','end_time','status'].forEach(k => {
     const el = document.getElementById('sort-ind-' + k);
+    const th = document.getElementById('sort-th-' + k);
     if (el) el.textContent = _snipeSort.key === k ? (_snipeSort.dir === 'asc' ? '▲' : '▼') : '';
+    if (th) th.setAttribute('aria-sort', _snipeSort.key === k ? (_snipeSort.dir === 'asc' ? 'ascending' : 'descending') : 'none');
   });
 }
 
@@ -1035,12 +1272,17 @@ function _renderSnipeRow(s, houseMap) {
     ? `<img class="snipe-thumb" src="${esc(s.thumbnail_url)}" alt="" loading="lazy" onerror="this.style.display='none'">`
     : '<div class="snipe-thumb" style="background:var(--border)"></div>';
   const house = s.auction_house_id ? houseMap[s.auction_house_id] : null;
-  const canCancel = ['scheduled', 'watching', 'bidding', 'paused'].includes(s.status);
+  const canCancel = ['scheduled', 'watching', 'bidding', 'paused', 'capped_out', 'auth_failed'].includes(s.status);
   const canBid = ['scheduled', 'watching', 'bidding'].includes(s.status);
   const canPause = ['scheduled', 'watching', 'bidding'].includes(s.status);
-  const canResume = s.status === 'paused';
+  const canResume = ['paused', 'capped_out', 'auth_failed'].includes(s.status);
+  const endBadge = s.end_time
+    ? (s.end_time_estimated
+        ? '<span class="badge badge-estimated" style="margin-top:4px">Estimated</span>'
+        : '<span class="badge badge-live" style="margin-top:4px">Live</span>')
+    : '';
   const endsIn = s.end_time
-    ? `${timeUntil(s.end_time)}<div style="color:var(--text-dim);font-size:0.7rem">${shortDate(s.end_time)}</div>`
+    ? `${timeUntil(s.end_time)}<div style="color:var(--text-dim);font-size:0.7rem">${shortDate(s.end_time)}</div>${endBadge}`
     : '—';
   const bidCell = canBid
     ? `<div style="display:flex;gap:4px;align-items:center">
@@ -1065,12 +1307,12 @@ function _renderSnipeRow(s, houseMap) {
   return `<tr>
     <td>${thumb}</td>
     <td><a href="${esc(s.lot_url)}" target="_blank" rel="noopener">${esc(s.lot_title || 'Untitled')}</a>${houseLine}${gasLine}</td>
-    <td>${money(s.current_bid)}${bidInfo}</td>
+    <td>${money(s.current_bid)}${bidInfo}${s.winning_bid && ['lost','capped_out'].includes(s.status) ? `<div style="color:var(--text-dim);font-size:0.7rem">Sold: ${money(s.winning_bid)}</div>` : ''}</td>
     <td style="cursor:pointer" onclick="editMaxCap(${s.id}, ${s.max_cap})" id="cap-cell-${s.id}" title="Click to edit">${money(s.max_cap)}</td>
     <td style="white-space:nowrap">${endsIn}</td>
     <td>${statusBadge(s.status)}</td>
     <td>${bidCell}</td>
-    <td><div style="display:flex;gap:4px;white-space:nowrap">
+    <td><div style="display:flex;gap:4px;flex-wrap:wrap">
       ${canPause ? `<button class="btn btn-sm" onclick="pauseSnipe(${s.id})" style="background:var(--yellow);color:#000">Pause</button>` : ''}
       ${canResume ? `<button class="btn btn-sm" onclick="resumeSnipe(${s.id})" style="background:var(--green);color:#000">Resume</button>` : ''}
       ${canCancel ? `<button class="btn btn-danger btn-sm" onclick="cancelSnipe(${s.id})">Cancel</button>` : ''}
@@ -1095,7 +1337,9 @@ function renderSnipes() {
 
 async function loadSnipes() {
   try {
+    if (!_snipesLoaded) $('#snipes-tbody').innerHTML = '<tr><td colspan="8" class="loading-overlay"><div class="spinner"></div> Loading snipes...</td></tr>';
     const snipes = await api('/api/snipes');
+    _snipesLoaded = true;
     _snipesData = snipes;
     const tbody = $('#snipes-tbody');
     if (!snipes.length) {
@@ -1109,6 +1353,17 @@ async function loadSnipes() {
     renderSnipes();
   } catch (e) {
     console.error('Failed to load snipes', e);
+  }
+}
+
+async function refreshSnipeTimes() {
+  try {
+    showToast('Refreshing times from live HiBid pages...');
+    const res = await api('/api/snipes/refresh-times', { method: 'POST' });
+    await loadSnipes();
+    showToast(`Refreshed ${res.updated || 0} snipe time${(res.updated || 0) === 1 ? '' : 's'}.`, false, true);
+  } catch (e) {
+    showToast(`Failed to refresh times: ${e.message || e}`, true);
   }
 }
 
@@ -1134,7 +1389,7 @@ async function saveMaxCap(snipeId) {
       body: JSON.stringify({max_cap: val}),
     });
   } catch (e) {
-    alert('Error: ' + e.message);
+    showToast(e.message, 'error');
   }
   await loadSnipes();
 }
@@ -1170,39 +1425,39 @@ async function pauseSnipe(id) {
   try {
     await api(`/api/snipes/${id}/pause`, {method: 'POST'});
     await loadSnipes();
-  } catch (e) { alert('Error: ' + e.message); }
+  } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function resumeSnipe(id) {
   try {
     await api(`/api/snipes/${id}/resume`, {method: 'POST'});
     await loadSnipes();
-  } catch (e) { alert('Error: ' + e.message); }
+  } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function pauseAllSnipes() {
-  if (!confirm('Pause all active snipes?')) return;
+  if (!await confirmAction('Pause all active snipes?', {confirmText: 'Pause All'})) return;
   try {
     await api('/api/snipes/pause-all', {method: 'POST'});
     await loadSnipes();
-  } catch (e) { alert('Error: ' + e.message); }
+  } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function resumeAllSnipes() {
   try {
     await api('/api/snipes/resume-all', {method: 'POST'});
     await loadSnipes();
-  } catch (e) { alert('Error: ' + e.message); }
+  } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function cancelSnipe(id) {
-  if (!confirm('Cancel this snipe?')) return;
+  if (!await confirmAction('Cancel this snipe?', {confirmText: 'Cancel Snipe'})) return;
   try {
     await api(`/api/snipes/${id}/cancel`, {method: 'POST'});
     await loadSnipes();
     await refreshBudget();
   } catch (e) {
-    alert('Error: ' + e.message);
+    showToast(e.message, 'error');
   }
 }
 
@@ -1225,8 +1480,168 @@ function stopSnipeRefresh() {
 }
 
 /* ── History ── */
+let _historySnipes = [];
+let _historySort = { key: null, dir: 'desc' };
+let _historyFilter = 'all';
+
+function sortHistory(key) {
+  if (_historySort.key === key) {
+    _historySort.dir = _historySort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _historySort.key = key;
+    _historySort.dir = key === 'title' ? 'asc' : 'desc';
+  }
+  renderHistorySnipes();
+  $('#btn-reset-hist-sort').style.display = '';
+}
+
+function resetHistorySort() {
+  _historySort = { key: null, dir: 'desc' };
+  renderHistorySnipes();
+  $('#btn-reset-hist-sort').style.display = 'none';
+}
+
+function setHistoryFilter(status) {
+  _historyFilter = status;
+  document.querySelectorAll('#history-filters .filter-pill').forEach(el => {
+    el.classList.toggle('active', el.dataset.status === status);
+  });
+  renderHistorySnipes();
+}
+
+function _filteredSortedHistory() {
+  let data = [..._historySnipes];
+  // Filter by status
+  if (_historyFilter !== 'all') {
+    data = data.filter(s => s.status === _historyFilter);
+  }
+  // Filter by search
+  const q = ($('#history-search')?.value || '').toLowerCase().trim();
+  if (q) {
+    data = data.filter(s =>
+      (s.lot_title || '').toLowerCase().includes(q) ||
+      (s.auction_house_name || '').toLowerCase().includes(q)
+    );
+  }
+  // Sort
+  const { key, dir } = _historySort;
+  const statusOrder = ['won','lost','capped_out','error','auth_failed'];
+  if (!key) {
+    data.sort((a, b) => {
+      const ta = a.end_time ? new Date(a.end_time).getTime() : (a.updated_at ? new Date(a.updated_at).getTime() : 0);
+      const tb = b.end_time ? new Date(b.end_time).getTime() : (b.updated_at ? new Date(b.updated_at).getTime() : 0);
+      return tb - ta;
+    });
+    return data;
+  }
+  data.sort((a, b) => {
+    let va, vb;
+    if (key === 'title') { va = (a.lot_title || '').toLowerCase(); vb = (b.lot_title || '').toLowerCase(); }
+    else if (key === 'our_bid') { va = a.our_last_bid || 0; vb = b.our_last_bid || 0; }
+    else if (key === 'sold') { va = a.winning_bid || a.current_bid || 0; vb = b.winning_bid || b.current_bid || 0; }
+    else if (key === 'true_cost') { va = a.true_cost || 0; vb = b.true_cost || 0; }
+    else if (key === 'cap') { va = a.max_cap || 0; vb = b.max_cap || 0; }
+    else if (key === 'status') { va = statusOrder.indexOf(a.status); vb = statusOrder.indexOf(b.status); }
+    else if (key === 'ended') {
+      va = a.end_time ? new Date(a.end_time).getTime() : (a.updated_at ? new Date(a.updated_at).getTime() : 0);
+      vb = b.end_time ? new Date(b.end_time).getTime() : (b.updated_at ? new Date(b.updated_at).getTime() : 0);
+    }
+    if (va < vb) return dir === 'asc' ? -1 : 1;
+    if (va > vb) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  return data;
+}
+
+function _updateHistorySortIndicators() {
+  ['title','our_bid','sold','true_cost','cap','status','ended'].forEach(k => {
+    const el = document.getElementById('hsort-ind-' + k);
+    const th = document.getElementById('hsort-th-' + k);
+    if (el) el.textContent = _historySort.key === k ? (_historySort.dir === 'asc' ? '▲' : '▼') : '';
+    if (th) th.setAttribute('aria-sort', _historySort.key === k ? (_historySort.dir === 'asc' ? 'ascending' : 'descending') : 'none');
+  });
+}
+
+function renderHistorySnipes() {
+  const filtered = _filteredSortedHistory();
+  const snipesTbody = $('#history-snipes');
+  const statsDiv = $('#history-stats');
+
+  // Stats — always from full dataset
+  const all = _historySnipes;
+  const won = all.filter(s => s.status === 'won');
+  const lost = all.filter(s => s.status === 'lost');
+  const capped = all.filter(s => s.status === 'capped_out');
+  const totalSpent = won.reduce((sum, s) => sum + (s.true_cost || s.winning_bid || s.our_last_bid || 0), 0);
+  statsDiv.innerHTML = `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-align:center;min-width:80px">
+      <div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase">Won</div>
+      <div style="font-size:1.3rem;font-weight:700;color:var(--green)">${won.length}</div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-align:center;min-width:80px">
+      <div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase">Lost</div>
+      <div style="font-size:1.3rem;font-weight:700;color:var(--red)">${lost.length}</div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-align:center;min-width:80px">
+      <div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase">Capped Out</div>
+      <div style="font-size:1.3rem;font-weight:700;color:var(--yellow)">${capped.length}</div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-align:center;min-width:80px">
+      <div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase">Total Spent</div>
+      <div style="font-size:1.3rem;font-weight:700;color:var(--accent)">${money(totalSpent)}</div>
+    </div>
+  `;
+
+  if (!filtered.length) {
+    snipesTbody.innerHTML = '<tr><td colspan="8" class="empty">No matching snipes</td></tr>';
+    _updateHistorySortIndicators();
+    return;
+  }
+
+  snipesTbody.innerHTML = filtered.map(s => {
+    const thumb = s.thumbnail_url
+      ? `<img class="snipe-thumb" src="${esc(s.thumbnail_url)}" alt="" loading="lazy" onerror="this.style.display='none'">`
+      : '';
+    const soldPrice = s.winning_bid || s.current_bid || 0;
+    const houseLine = s.auction_house_name
+      ? `<div style="color:var(--text-dim);font-size:0.75rem;margin-top:2px">${esc(s.auction_house_name)} (${s.premium_pct || 0}%${s.per_item_fee ? ` + $${s.per_item_fee.toFixed(2)}` : ''})</div>`
+      : '';
+    const bidLogHtml = (s.bids && s.bids.length)
+      ? `<tr class="history-bid-log" id="bid-log-${s.id}" style="display:none"><td colspan="8" style="padding:0.5rem 1rem;background:var(--bg-body)">
+          <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:4px;font-weight:600">Bid Log (${s.bids.length})</div>
+          ${s.bids.map(b => {
+            const resultColor = b.result === 'placed' ? 'var(--green)' : b.result === 'error' ? 'var(--red)' : 'var(--yellow)';
+            return `<div style="font-size:0.75rem;display:flex;gap:8px;padding:2px 0;border-bottom:1px solid var(--border)">
+              <span style="color:var(--text-dim);min-width:110px">${b.created_at ? shortDate(b.created_at) : ''}</span>
+              <span style="font-weight:600">${money(b.bid_amount)}</span>
+              <span style="color:${resultColor};font-weight:600">${b.result}</span>
+              <span style="color:var(--text-dim)">${esc(b.message || '')}</span>
+            </div>`;
+          }).join('')}
+        </td></tr>`
+      : '';
+    const expandBtn = (s.bids && s.bids.length)
+      ? `<span onclick="toggleBidLog(${s.id})" style="cursor:pointer;color:var(--accent);font-size:0.7rem;text-decoration:underline" id="bid-log-toggle-${s.id}">${s.bids.length} bid${s.bids.length > 1 ? 's' : ''}</span>`
+      : '';
+    return `<tr>
+      <td>${thumb}</td>
+      <td><a href="${esc(s.lot_url)}" target="_blank" rel="noopener">${esc(s.lot_title || 'Untitled')}</a>${houseLine}</td>
+      <td>${s.our_last_bid ? money(s.our_last_bid) : '—'}${expandBtn ? `<div>${expandBtn}</div>` : ''}</td>
+      <td style="font-weight:700">${money(soldPrice)}</td>
+      <td>${s.true_cost ? money(s.true_cost) : '—'}</td>
+      <td>${money(s.max_cap)}</td>
+      <td>${statusBadge(s.status)}</td>
+      <td>${s.end_time ? shortDate(s.end_time) : (s.updated_at ? shortDate(s.updated_at) : '—')}</td>
+    </tr>${bidLogHtml}`;
+  }).join('');
+  _updateHistorySortIndicators();
+}
+
 async function loadHistory() {
   try {
+    $('#history-deals').innerHTML = '<tr><td colspan="6" class="loading-overlay"><div class="spinner"></div> Loading...</td></tr>';
+    $('#history-snipes').innerHTML = '<tr><td colspan="8" class="loading-overlay"><div class="spinner"></div> Loading...</td></tr>';
+    $('#history-stats').innerHTML = '';
     const data = await api('/api/history');
 
     const dealsTbody = $('#history-deals');
@@ -1245,22 +1660,37 @@ async function loadHistory() {
       dealsTbody.innerHTML = '<tr><td colspan="6" class="empty">No deal checks yet</td></tr>';
     }
 
-    const snipesTbody = $('#history-snipes');
-    if (data.snipes && data.snipes.length) {
-      snipesTbody.innerHTML = data.snipes.map(s => `
-        <tr>
-          <td><a href="${esc(s.lot_url)}" target="_blank" rel="noopener">${esc(s.lot_title || 'Untitled')}</a></td>
-          <td>${money(s.max_cap)}</td>
-          <td>${money(s.current_bid)}</td>
-          <td>${statusBadge(s.status)}</td>
-          <td>${shortDate(s.created_at)}</td>
-        </tr>
-      `).join('');
-    } else {
-      snipesTbody.innerHTML = '<tr><td colspan="5" class="empty">No past snipes yet</td></tr>';
-    }
+    _historySnipes = data.snipes || [];
+
+    // Build filter pills
+    const filtersDiv = $('#history-filters');
+    const statuses = ['all', 'won', 'lost', 'capped_out'];
+    const labels = { all: 'All', won: 'Won', lost: 'Lost', capped_out: 'Capped Out' };
+    const colors = { all: 'var(--accent)', won: 'var(--green)', lost: 'var(--red)', capped_out: 'var(--yellow)' };
+    filtersDiv.innerHTML = statuses.map(st => {
+      const count = st === 'all' ? _historySnipes.length : _historySnipes.filter(s => s.status === st).length;
+      const active = _historyFilter === st;
+      return `<button class="filter-pill${active ? ' active' : ''}" data-status="${st}" onclick="setHistoryFilter('${st}')"
+        style="padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;cursor:pointer;border:1px solid ${colors[st]};
+        background:${active ? colors[st] : 'transparent'};color:${active ? '#000' : colors[st]};transition:all 0.15s">${labels[st]} (${count})</button>`;
+    }).join('');
+
+    renderHistorySnipes();
   } catch (e) {
     console.error('Failed to load history', e);
+  }
+}
+
+function toggleBidLog(snipeId) {
+  const row = $(`#bid-log-${snipeId}`);
+  const toggle = $(`#bid-log-toggle-${snipeId}`);
+  if (!row) return;
+  if (row.style.display === 'none') {
+    row.style.display = '';
+    if (toggle) toggle.style.fontWeight = '700';
+  } else {
+    row.style.display = 'none';
+    if (toggle) toggle.style.fontWeight = '';
   }
 }
 
@@ -1281,25 +1711,25 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ── Setup: Cookie Import ── */
 async function importCookies() {
   const raw = $('#cookie-json').value.trim();
-  if (!raw) return alert('Paste the cookie JSON first');
+  if (!raw) return showToast('Paste the cookie JSON first', 'error');
   let cookies;
   try {
     cookies = JSON.parse(raw);
   } catch (e) {
-    return alert('Invalid JSON. Make sure you exported from Cookie Editor.');
+    return showToast('Invalid JSON — make sure you exported from Cookie Editor', 'error');
   }
-  if (!Array.isArray(cookies)) return alert('Expected a JSON array of cookies');
+  if (!Array.isArray(cookies)) return showToast('Expected a JSON array of cookies', 'error');
 
   try {
     const result = await api('/api/cookies', {
       method: 'POST',
       body: JSON.stringify({cookies}),
     });
-    alert(`Imported ${result.count} HiBid cookies successfully!`);
+    showToast(`Imported ${result.count} cookies`, 'success');
     $('#cookie-json').value = '';
     checkCookieStatus();
   } catch (e) {
-    alert('Error: ' + e.message);
+    showToast(e.message, 'error');
   }
 }
 
@@ -1314,6 +1744,26 @@ async function checkCookieStatus() {
       badge.textContent = 'Not loaded';
       badge.className = 'cookie-status cookie-missing';
     }
+    // JWT expiry banner
+    const banner = $('#jwt-banner');
+    const hrs = data.jwt_expires_in_hours;
+    if (hrs === null || hrs === undefined) {
+      banner.style.display = 'none';
+    } else if (hrs < 0) {
+      banner.className = 'jwt-banner danger';
+      banner.textContent = 'HiBid session EXPIRED — import fresh cookies in Setup';
+      banner.style.display = 'block';
+    } else if (hrs < 4) {
+      banner.className = 'jwt-banner danger';
+      banner.textContent = `HiBid session expires in ${Math.round(hrs)}h — import fresh cookies soon`;
+      banner.style.display = 'block';
+    } else if (hrs < 24) {
+      banner.className = 'jwt-banner warn';
+      banner.textContent = `HiBid session expires in ${Math.round(hrs)}h`;
+      banner.style.display = 'block';
+    } else {
+      banner.style.display = 'none';
+    }
   } catch (e) {
     console.error('Cookie status check failed', e);
   }
@@ -1327,6 +1777,13 @@ function esc(s) {
   return d.innerHTML;
 }
 
+/* ── Sanitize URLs — only allow http/https ── */
+function safeUrl(url) {
+  if (!url) return '#';
+  try { const u = new URL(url); return ['http:', 'https:'].includes(u.protocol) ? url : '#'; }
+  catch { return '#'; }
+}
+
 /* ── Budget Bar ── */
 async function refreshBudget() {
   try {
@@ -1338,6 +1795,8 @@ async function refreshBudget() {
     if (b.global_spend_cap === 0) {
       fill.style.width = '100%';
       fill.className = 'budget-fill red';
+      fill.setAttribute('aria-valuenow', '100');
+      fill.setAttribute('aria-valuetext', 'Budget not set - sniping disabled');
       text.innerHTML = '<span style="color:var(--red);font-weight:700">Budget not set - sniping disabled</span>';
       return;
     }
@@ -1345,6 +1804,8 @@ async function refreshBudget() {
     fill.style.width = pct + '%';
     fill.className = 'budget-fill ' + (pct < 50 ? 'green' : pct < 80 ? 'yellow' : 'red');
     text.textContent = '$' + b.spent.toFixed(2) + ' / $' + b.global_spend_cap.toFixed(2) + ' spent';
+    fill.setAttribute('aria-valuenow', Math.round(pct));
+    fill.setAttribute('aria-valuetext', text.textContent);
 
     // Exposure bar ("if you win")
     const eFill = $('#exposure-fill');
@@ -1357,6 +1818,8 @@ async function refreshBudget() {
     } else {
       eText.textContent = 'No active bids';
     }
+    eFill.setAttribute('aria-valuenow', Math.round(ePct));
+    eFill.setAttribute('aria-valuetext', eText.textContent);
   } catch (e) {
     console.error('Budget refresh failed', e);
   }
@@ -1364,14 +1827,14 @@ async function refreshBudget() {
 
 /* ── Kill Switch ── */
 async function killAllSnipes() {
-  if (!confirm('STOP ALL SNIPES?\n\nThis will immediately cancel every active snipe. This cannot be undone.')) return;
+  if (!await confirmAction('This will immediately cancel every active snipe. This cannot be undone.', {confirmText: 'Stop All Snipes'})) return;
   try {
     await api('/api/snipes/cancel-all', {method: 'POST'});
     await loadSnipes();
     await refreshBudget();
-    alert('All snipes cancelled.');
+    showToast('All snipes cancelled', 'success');
   } catch (e) {
-    alert('Error: ' + e.message);
+    showToast(e.message, 'error');
   }
 }
 
@@ -1392,7 +1855,7 @@ async function loadSettings() {
 async function saveSettings() {
   const globalCap = parseFloat($('#settings-global-cap').value);
   const singleCap = parseFloat($('#settings-single-cap').value);
-  if (isNaN(globalCap) || isNaN(singleCap)) return alert('Enter valid numbers for budget caps');
+  if (isNaN(globalCap) || isNaN(singleCap)) return showToast('Enter valid numbers for budget caps', 'error');
   const homeAddress = $('#settings-home-address').value.trim() || null;
   const gasPrice = parseFloat($('#settings-gas-price').value) || 1.80;
   const fuel = parseFloat($('#settings-fuel').value) || 11.6;
@@ -1410,15 +1873,16 @@ async function saveSettings() {
     await refreshBudget();
     await loadHouses(); // Recalculate gas costs with new fuel settings
   } catch (e) {
-    alert('Error: ' + e.message);
+    showToast(e.message, 'error');
   }
 }
 
 /* ── Activity Log ── */
 async function loadActivityLog() {
   try {
-    const logs = await api('/api/bid-log?limit=100');
     const tbody = $('#activity-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" class="loading-overlay"><div class="spinner"></div> Loading...</td></tr>';
+    const logs = await api('/api/bid-log?limit=100');
     if (!logs.length) {
       tbody.innerHTML = '<tr><td colspan="5" class="empty">No bid activity yet</td></tr>';
       return;
@@ -1438,10 +1902,417 @@ async function loadActivityLog() {
   }
 }
 
+/* ── Toast ── */
+function showToast(msg, type = '') {
+  const prev = document.querySelector('.toast');
+  if (prev) prev.remove();
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ` toast-${type}` : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  el.onclick = () => el.remove();
+  setTimeout(() => { if (el.parentNode) { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); } }, 3500);
+}
+
+function confirmAction(msg, opts = {}) {
+  return new Promise(resolve => {
+    const btnText = opts.confirmText || 'Confirm';
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.innerHTML = `
+      <div class="confirm-box">
+        <p>${msg}</p>
+        <div class="confirm-actions">
+          <button class="btn btn-sm" style="background:var(--border)">Cancel</button>
+          <button class="btn btn-sm btn-danger">${btnText}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const close = (result) => { overlay.remove(); resolve(result); };
+    const btns = overlay.querySelectorAll('.confirm-actions .btn');
+    btns[0].onclick = () => close(false);
+    btns[1].onclick = () => close(true);
+    overlay.onclick = (e) => { if (e.target === overlay) close(false); };
+    btns[1].focus();
+  });
+}
+
+/* ── Watchlist ── */
+
+async function loadWatchlist() {
+  await Promise.all([loadWatchlistSettings(), loadWatchlistSearches(), loadWatchlistResults()]);
+}
+
+async function loadWatchlistSettings() {
+  try {
+    const s = await api('/api/settings');
+    $('#wl-postal').value = s.watchlist_postal_code || '';
+    $('#wl-radius').value = s.watchlist_radius_km || 50;
+  } catch (e) { console.error('Failed to load watchlist settings', e); }
+}
+
+async function saveWatchlistSettings() {
+  const postal = $('#wl-postal').value.trim();
+  const radius = parseInt($('#wl-radius').value) || 50;
+  if (!postal) { showToast('Please enter a postal code', 'error'); return; }
+  try {
+    // Get current settings first so we don't blank other fields
+    const current = await api('/api/settings');
+    await api('/api/settings', {
+      method: 'PUT',
+      body: JSON.stringify({
+        global_spend_cap: current.global_spend_cap,
+        max_single_snipe_cap: current.max_single_snipe_cap,
+        home_address: current.home_address,
+        gas_price_per_liter: current.gas_price_per_liter,
+        fuel_consumption: current.fuel_consumption,
+        watchlist_postal_code: postal,
+        watchlist_radius_km: radius,
+      }),
+    });
+    showToast('Settings saved', 'success');
+  } catch (e) { showToast('Error saving: ' + e.message, 'error'); }
+}
+
+async function loadWatchlistSearches() {
+  try {
+    const searches = await api('/api/watchlist/searches');
+    const container = $('#wl-searches-list');
+    if (!searches.length) {
+      container.innerHTML = '<span class="empty">No saved searches yet</span>';
+      return;
+    }
+    container.innerHTML = searches.map(s => `
+      <div id="wl-search-${s.id}" style="display:flex;align-items:center;gap:0.75rem;padding:0.4rem 0.5rem;border-bottom:1px solid var(--border)">
+        <input type="checkbox" ${s.enabled ? 'checked' : ''} onchange="toggleWatchlistSearch(${s.id}, this.checked)" style="flex-shrink:0">
+        <span onclick="editWatchlistSearch(${s.id}, '${esc(s.search_term).replace(/'/g, "\\'")}')" style="flex:1;font-size:0.95rem;cursor:pointer" title="Click to edit">${esc(s.search_term)}</span>
+        <button class="btn btn-sm" onclick="editWatchlistSearch(${s.id}, '${esc(s.search_term).replace(/'/g, "\\'")}')" title="Edit" style="flex-shrink:0;color:var(--text-dim);padding:0.2rem 0.5rem">&#9998;</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteWatchlistSearch(${s.id})" title="Delete" style="flex-shrink:0">&times;</button>
+      </div>
+    `).join('');
+  } catch (e) { console.error('Failed to load searches', e); }
+}
+
+async function addWatchlistSearch() {
+  const input = $('#wl-new-term');
+  const term = input.value.trim();
+  if (!term) return;
+  try {
+    await api('/api/watchlist/searches', { method: 'POST', body: JSON.stringify({ search_term: term }) });
+    input.value = '';
+    loadWatchlistSearches();
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+function editWatchlistSearch(id, currentTerm) {
+  const row = $(`#wl-search-${id}`);
+  row.innerHTML = `
+    <input type="text" id="wl-edit-${id}" value="${esc(currentTerm)}" style="flex:1">
+    <button class="btn btn-primary btn-sm" onclick="saveWatchlistSearchEdit(${id})">Save</button>
+    <button class="btn btn-sm" onclick="loadWatchlistSearches()">Cancel</button>
+  `;
+  const input = $(`#wl-edit-${id}`);
+  input.focus();
+  input.selectionStart = input.value.length;
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveWatchlistSearchEdit(id);
+    if (e.key === 'Escape') loadWatchlistSearches();
+  });
+}
+
+async function saveWatchlistSearchEdit(id) {
+  const input = $(`#wl-edit-${id}`);
+  const term = input.value.trim();
+  if (!term) { showToast('Search term cannot be empty', 'error'); return; }
+  try {
+    await api(`/api/watchlist/searches/${id}`, { method: 'PUT', body: JSON.stringify({ search_term: term }) });
+    showToast('Search updated', 'success');
+    loadWatchlistSearches();
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function toggleWatchlistSearch(id, enabled) {
+  try {
+    await api(`/api/watchlist/searches/${id}`, { method: 'PUT', body: JSON.stringify({ enabled }) });
+  } catch (e) { showToast('Error: ' + e.message, 'error'); loadWatchlistSearches(); }
+}
+
+async function deleteWatchlistSearch(id) {
+  try {
+    await api(`/api/watchlist/searches/${id}`, { method: 'DELETE' });
+    loadWatchlistSearches();
+    loadWatchlistResults();
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+let _knownWatchlistIds = new Set();
+
+async function loadWatchlistResults(newIds = null) {
+  try {
+    $('#wl-results').innerHTML = '<div class="loading-overlay"><div class="spinner"></div> Loading results...</div>';
+    const data = await api('/api/watchlist/results');
+    const container = $('#wl-results');
+    if (!data.total) {
+      container.innerHTML = '<p class="empty">No results yet. Add some searches and click Scan Now.</p>';
+      _knownWatchlistIds = new Set();
+      return;
+    }
+    let html = '';
+    const allIds = new Set();
+    for (const [term, items] of Object.entries(data.groups)) {
+      const newInGroup = newIds ? items.filter(i => newIds.has(i.id)).length : 0;
+      html += `<div style="margin-bottom:1.5rem">`;
+      html += `<h3 style="color:var(--accent);margin-bottom:0.5rem;font-size:1rem">${esc(term)} <span style="color:var(--text-dim);font-weight:normal">(${items.length} open${newInGroup ? `, <span style="color:var(--accent)">${newInGroup} new</span>` : ''})</span></h3>`;
+      if (!items.length) {
+        html += `<p class="empty">No results</p>`;
+      }
+      for (const item of items) {
+        allIds.add(item.id);
+        html += renderWatchlistItem(item, false, newIds && newIds.has(item.id));
+      }
+      html += `</div>`;
+    }
+    container.innerHTML = html;
+    _knownWatchlistIds = allIds;
+  } catch (e) { console.error('Failed to load results', e); }
+}
+
+function renderWatchlistItem(item, closed = false, isNew = false) {
+  const thumb = item.thumbnail_url
+    ? `<img src="${esc(item.thumbnail_url)}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0" loading="lazy">`
+    : `<div style="width:60px;height:60px;background:var(--bg-input);border-radius:4px;flex-shrink:0"></div>`;
+  const houseBadge = item.matched_house
+    ? `<span class="badge badge-good" style="font-size:0.7rem">${esc(item.matched_house.name)} (${item.matched_house.premium_pct}%)</span>`
+    : (item.auctioneer_name ? `<span style="color:var(--text-dim);font-size:0.8rem">${esc(item.auctioneer_name)}</span>` : '');
+  const distance = item.distance_miles != null ? `${item.distance_miles.toFixed(0)} mi` : '';
+  const closedStyle = closed ? 'opacity:0.4;' : '';
+  const snipeBtn = closed || item.status === 'sniped'
+    ? (item.status === 'sniped' ? '<span class="badge badge-watching" style="font-size:0.7rem">Sniped</span>' : '<span style="color:var(--text-dim);font-size:0.75rem">Closed</span>')
+    : `<button class="btn btn-primary btn-sm" onclick="showSnipeForm(${item.id})">Snipe</button>`;
+  const dismissBtn = !closed && item.status !== 'sniped'
+    ? `<button class="btn btn-sm" onclick="dismissWatchlistResult(${item.id})" title="Dismiss" style="padding:0.2rem 0.5rem;color:var(--text-dim)">&times;</button>`
+    : '';
+
+  return `
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:0.4rem;background:var(--bg-card-alt);${closedStyle}" id="wl-item-${item.id}" data-matched-house="${item.matched_house_id || ''}" data-auc-name="${esc(item.auctioneer_name || '')}" data-auc-premium="${item.buyer_premium_pct || ''}" data-auc-id="${item.auctioneer_id || ''}">
+      ${thumb}
+      <div style="flex:1;min-width:0">
+        <a href="${esc(item.lot_url)}" target="_blank" style="color:var(--text);text-decoration:none;font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isNew ? '<span class="badge badge-new" style="font-size:0.6rem;margin-right:0.4rem;vertical-align:middle">NEW</span>' : ''}${esc(item.title)}</a>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-top:0.25rem;font-size:0.8rem">
+          ${houseBadge}
+          ${item.auction_city ? `<span style="color:var(--text-dim)">${esc(item.auction_city)}</span>` : ''}
+          ${distance ? `<span style="color:var(--text-dim)">${distance}</span>` : ''}
+          ${item.currency !== 'CAD' ? `<span class="badge" style="background:color-mix(in srgb,var(--blue) 15%,transparent);color:var(--blue);font-size:0.65rem">${item.currency}</span>` : ''}
+          <a href="https://www.amazon.ca/s?k=${encodeURIComponent(item.title)}" target="_blank" style="text-decoration:none" title="Search Amazon.ca"><span class="badge" style="background:rgba(255,153,0,0.15);color:#f90;font-size:0.65rem">Amazon</span></a>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;min-width:80px">
+        <div style="font-weight:600;color:var(--green)">${money(item.current_bid)}</div>
+        <div style="font-size:0.75rem;color:var(--text-dim)">${item.bid_count ? item.bid_count + ' bid' + (item.bid_count > 1 ? 's' : '') : 'Starting'}</div>
+        <div style="font-size:0.75rem;color:var(--yellow)">${item.closes_at ? timeUntil(item.closes_at) : ''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.3rem;align-items:center;flex-shrink:0">
+        ${snipeBtn}
+        ${dismissBtn}
+      </div>
+    </div>
+    <div id="wl-snipe-form-${item.id}" style="display:none"></div>
+  `;
+}
+
+function showSnipeForm(resultId) {
+  const formDiv = $(`#wl-snipe-form-${resultId}`);
+  if (formDiv.style.display !== 'none') { formDiv.style.display = 'none'; return; }
+  const houseOpts = houses.map(h => `<option value="${h.id}">${esc(h.name)} (${h.premium_pct}%)</option>`).join('');
+  const itemDiv = $(`#wl-item-${resultId}`);
+  const matchedId = itemDiv ? itemDiv.dataset.matchedHouse : '';
+  const aucName = itemDiv ? (itemDiv.dataset.aucName || '') : '';
+  const aucPremium = itemDiv ? (itemDiv.dataset.aucPremium || '') : '';
+
+  formDiv.innerHTML = `
+    <div style="padding:0.6rem 0.6rem 0.6rem 4.5rem;background:var(--bg-card);border:1px solid var(--accent);border-radius:var(--radius);margin-bottom:0.4rem">
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+        <label style="font-size:0.85rem;color:var(--text-dim)">Max Cap $</label>
+        <input type="number" id="wl-cap-${resultId}" placeholder="0.00" min="0" step="0.01" style="width:100px" oninput="updateWlCost(${resultId})">
+        <label style="font-size:0.85rem;color:var(--text-dim)">House</label>
+        <select id="wl-house-${resultId}" style="max-width:200px" onchange="if(this.value==='new')showAddHouseInline(${resultId});else updateWlCost(${resultId})">
+          ${houseOpts}
+          <option value="new">+ Add New House...</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="submitWatchlistSnipe(${resultId})">Queue Snipe</button>
+        <button class="btn btn-sm" onclick="document.querySelector('#wl-snipe-form-${resultId}').style.display='none'">Cancel</button>
+      </div>
+      <div id="wl-cost-${resultId}" style="margin-top:0.4rem;font-size:0.8rem;color:var(--text-dim)"></div>
+      <div id="wl-add-house-${resultId}" style="display:none"></div>
+    </div>
+  `;
+  formDiv.style.display = 'block';
+  if (matchedId) $(`#wl-house-${resultId}`).value = matchedId;
+  // If no houses at all, auto-show the add form
+  if (!houses.length) showAddHouseInline(resultId);
+  updateWlCost(resultId);
+}
+
+function updateWlCost(resultId) {
+  const capInput = $(`#wl-cap-${resultId}`);
+  const houseSelect = $(`#wl-house-${resultId}`);
+  const costDiv = $(`#wl-cost-${resultId}`);
+  if (!costDiv) return;
+  const cap = parseFloat(capInput.value);
+  const houseId = parseInt(houseSelect.value);
+  if (!cap || cap <= 0 || !houseId || isNaN(houseId)) { costDiv.innerHTML = ''; return; }
+  const house = houses.find(h => h.id === houseId);
+  if (!house) { costDiv.innerHTML = ''; return; }
+  const premium = cap * (house.premium_pct / 100);
+  const subtotal = cap + premium + (house.per_item_fee || 0);
+  const hst = subtotal * 0.13;
+  const trueCost = subtotal + hst;
+  const gas = house.round_trip_gas_cost || 0;
+  const allIn = trueCost + gas;
+  let html = `<span style="color:var(--yellow)">True cost: <b>${money(trueCost)}</b></span>`;
+  html += ` <span style="color:var(--text-dim)">(${money(cap)} + ${house.premium_pct}% + ${money(house.per_item_fee||0)} fee + 13% HST)</span>`;
+  if (house.distance_km) {
+    html += `<br><span style="color:var(--blue)">Drive: ${house.distance_km} km, ${Math.round(house.drive_minutes||0)} min</span>`;
+    html += ` <span style="color:var(--text-dim)">Gas: ${money(gas)}</span>`;
+    html += ` <span style="color:var(--orange)">All-in: <b>${money(allIn)}</b></span>`;
+  }
+  costDiv.innerHTML = html;
+}
+
+function showAddHouseInline(resultId) {
+  const itemDiv = $(`#wl-item-${resultId}`);
+  const aucName = itemDiv ? (itemDiv.dataset.aucName || '') : '';
+  const aucPremium = itemDiv ? (itemDiv.dataset.aucPremium || '') : '';
+  const container = $(`#wl-add-house-${resultId}`);
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--border)">
+      <label style="font-size:0.8rem;color:var(--text-dim)">Name</label>
+      <input type="text" id="wl-newhouse-name-${resultId}" value="${esc(aucName)}" placeholder="Auction house name" style="width:180px">
+      <label style="font-size:0.8rem;color:var(--text-dim)">Premium %</label>
+      <input type="number" id="wl-newhouse-prem-${resultId}" value="${esc(aucPremium)}" placeholder="15" min="0" step="0.5" style="width:70px">
+      <label style="font-size:0.8rem;color:var(--text-dim)">Per-item fee $</label>
+      <input type="number" id="wl-newhouse-fee-${resultId}" value="0" min="0" step="0.5" style="width:70px">
+      <button class="btn btn-primary btn-sm" onclick="addHouseFromWatchlist(${resultId})">Add House</button>
+    </div>
+  `;
+  container.style.display = 'block';
+}
+
+async function addHouseFromWatchlist(resultId) {
+  const name = $(`#wl-newhouse-name-${resultId}`).value.trim();
+  const prem = parseFloat($(`#wl-newhouse-prem-${resultId}`).value);
+  const fee = parseFloat($(`#wl-newhouse-fee-${resultId}`).value) || 0;
+  if (!name) { showToast('Enter a house name', 'error'); return; }
+  if (isNaN(prem)) { showToast('Enter a premium %', 'error'); return; }
+  const itemDiv = $(`#wl-item-${resultId}`);
+  const aucId = itemDiv ? parseInt(itemDiv.dataset.aucId) || null : null;
+  try {
+    const newHouse = await api('/api/auction-houses', {
+      method: 'POST', body: JSON.stringify({ name, premium_pct: prem, per_item_fee: fee, auctioneer_id: aucId }),
+    });
+    showToast(`Added ${name}`, 'success');
+    await loadHouses();
+    // Refresh the dropdown and select the new house
+    const select = $(`#wl-house-${resultId}`);
+    const houseOpts = houses.map(h => `<option value="${h.id}">${esc(h.name)} (${h.premium_pct}%)</option>`).join('');
+    select.innerHTML = houseOpts + '<option value="new">+ Add New House...</option>';
+    select.value = newHouse.id;
+    $(`#wl-add-house-${resultId}`).style.display = 'none';
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function submitWatchlistSnipe(resultId) {
+  const cap = parseFloat($(`#wl-cap-${resultId}`).value);
+  const houseId = parseInt($(`#wl-house-${resultId}`).value);
+  if (!cap || cap <= 0) { showToast('Enter a max cap', 'error'); return; }
+  if (!houseId) { showToast('Select an auction house', 'error'); return; }
+  try {
+    const result = await api(`/api/watchlist/results/${resultId}/snipe`, {
+      method: 'POST',
+      body: JSON.stringify({ max_cap: cap, auction_house_id: houseId }),
+    });
+    $(`#wl-snipe-form-${resultId}`).style.display = 'none';
+    loadWatchlistResults();
+    showToast(`Snipe queued: ${result.lot_title} (${result.status})`, 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function dismissWatchlistResult(id) {
+  try {
+    await api(`/api/watchlist/results/${id}/dismiss`, { method: 'POST' });
+    const item = $(`#wl-item-${id}`);
+    if (item) item.style.display = 'none';
+    const form = $(`#wl-snipe-form-${id}`);
+    if (form) form.style.display = 'none';
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function triggerWatchlistScan() {
+  const btn = $('#wl-scan-btn');
+  const status = $('#wl-scan-status');
+  btn.disabled = true;
+  btn.textContent = 'Scanning...';
+  status.textContent = '';
+  const beforeIds = new Set(_knownWatchlistIds);
+  try {
+    const summary = await api('/api/watchlist/scan', { method: 'POST' });
+    status.textContent = `Found ${summary.new_results} new, updated ${summary.updated_results} (${summary.searches_run} searches)`;
+    status.style.color = '';
+    // Load results and figure out which IDs are new
+    const freshData = await api('/api/watchlist/results');
+    const newIds = new Set();
+    if (freshData.groups) {
+      for (const items of Object.values(freshData.groups)) {
+        for (const item of items) {
+          if (!beforeIds.has(item.id)) newIds.add(item.id);
+        }
+      }
+    }
+    await loadWatchlistResults(newIds.size > 0 ? newIds : null);
+  } catch (e) {
+    status.textContent = 'Scan failed: ' + e.message;
+    status.style.color = 'var(--red)';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Scan Now';
+  }
+}
+
 /* ── Init ── */
 loadHouses();
 refreshBudget();
-setInterval(refreshBudget, 10000);
+checkCookieStatus();
+let _budgetTimer = setInterval(refreshBudget, 10000);
+setInterval(checkCookieStatus, 60000); // Check JWT expiry every minute
+
+/* Pause polling when tab is hidden to save battery/bandwidth */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    clearInterval(_budgetTimer);
+    _budgetTimer = null;
+    stopSnipeRefresh();
+  } else {
+    refreshBudget();
+    _budgetTimer = setInterval(refreshBudget, 10000);
+    // Resume snipe refresh if on snipes tab
+    const activeTab = $('.tab-btn.active');
+    if (activeTab && activeTab.dataset.tab === 'snipes') startSnipeRefresh();
+  }
+});
+
+$('#wl-new-term').addEventListener('keydown', e => { if (e.key === 'Enter') addWatchlistSearch(); });
+
+/* ── Tab scroll indicator ── */
+const _tabsNav = document.querySelector('.tabs');
+function _checkTabScroll() {
+  if (!_tabsNav) return;
+  const scrollable = _tabsNav.scrollWidth > _tabsNav.clientWidth + 2;
+  const atEnd = _tabsNav.scrollLeft + _tabsNav.clientWidth >= _tabsNav.scrollWidth - 2;
+  _tabsNav.classList.toggle('scroll-hint', scrollable && !atEnd);
+}
+_tabsNav.addEventListener('scroll', _checkTabScroll, {passive: true});
+window.addEventListener('resize', _checkTabScroll);
+_checkTabScroll();
 </script>
 </body>
 </html>

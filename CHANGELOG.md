@@ -1,5 +1,70 @@
 # Changelog
 
+## [Unreleased] - 2026-04-03
+
+### Frontend UI Overhaul (Impeccable Audit)
+- **Typography:** Added Space Grotesk heading font, bumped base from 15px to 16px, established 5-step type scale, set body line-height to 1.6
+- **Color:** Replaced AI-purple accent (#6c63ff) with amber/gold (#d4a017), warmed backgrounds/text, replaced Material Design stock colors with natural tones
+- **Responsive:** Added 768px tablet breakpoint, snipe queue table converts to card layout on mobile, 44px touch targets, tab scroll fade indicator
+- **Mobile tabs:** Shortened labels on phones (Deal Analyzer → Deals, Snipe Queue → Snipes, etc.) so all 7 tabs fit without scrolling on S25 Ultra
+- **Accessibility:** Full ARIA tab pattern (roles, states, keyboard nav with arrow keys), progressbar roles on budget bars, focus-visible indicators, skip nav link, semantic HTML (`<header>`, `<main>`), `for`/`id` on all form labels, `aria-sort` on sortable table headers
+- **Alerts → Toasts:** Replaced all 26 `alert()` calls with non-blocking toast notifications, all 4 `confirm()` calls with styled inline confirmation dialogs
+- **Loading states:** Added spinners to Snipe Queue, History, Activity Log, and Watchlist tabs while data loads
+- **Badge system:** All badge backgrounds now use `color-mix()` referencing CSS variables instead of hardcoded rgba values
+- **URL sanitization:** `safeUrl()` helper validates http/https protocol on all API-sourced URLs (dashboard + bookmarklet)
+- **Reduced motion:** `prefers-reduced-motion` media query disables all animations
+- **Polling optimization:** Budget/snipe refresh pauses when browser tab is hidden (`visibilitychange` API)
+- **Error messages:** API errors now parse JSON `detail` field instead of showing raw `{"detail":"..."}` blobs
+- **Watchlist NEW badge:** Scan results show amber "NEW" badge on items found since last scan, with per-group count
+- **Default sort:** Snipe queue defaults to active-first then ending-soonest, so old capped-out snipes sink to bottom
+- **Capped out / auth_failed recovery:** Resume and Cancel buttons now show on capped_out and auth_failed snipes, backend accepts resume from these states
+- **Desktop table fix:** Snipe table has 850px min-width (reset on mobile) so action buttons don't clip; action button flex-wrap prevents overflow
+
+### Sniper Timing Fixes
+- **Wake-before increased:** 5 min → 15 min before estimated end time (more margin for inaccurate bookmarklet estimates)
+- **Live end_time extraction:** Bot reads real end time from HiBid page on wake via `_extract_end_time_from_page()`, replacing bookmarklet estimate
+- **Double-read validation:** Extracts end time twice with a page reload in between; if reads disagree by >30s (wrong-lot data), uses the later one
+- **Timezone fix:** Bookmarklet and sniper now prefer `timeLeftSeconds` (timezone-immune countdown) over absolute time strings — fixes HiBid mislabeling EDT as EST (1-hour offset)
+- **Wall-clock-only countdown:** `seconds_left` is computed purely from `end_time - now()`. Frozen page timer is ignored entirely for bid timing decisions. Page state is only used for price/ended detection.
+- **Snipe window:** Changed from T-3 seconds to T-30 seconds for more margin on timing errors and bid retries
+- **GraphQL bid timeout:** 15s `asyncio.wait_for` + 10s `AbortController` inside JS to prevent silent hangs. On timeout, page reloads automatically.
+
+### Authentication Fixes
+- **CRITICAL: Fixed `inject_cookies()` crash** — was calling `_browser.is_connected()` on `BrowserContext` (which has no such method), causing `AttributeError` silently caught by callers. Cookie imports via Settings tab and auth recovery never actually reached the running browser. Now uses `_browser_alive()` (the correct check).
+- **Auth recovery on startup:** If token validation fails when bot wakes, reloads cookies from `data/hibid_cookies.json`, injects into browser, re-extracts token, and re-validates before giving up.
+- **Auth failure detection during bids:** GraphQL bid responses now check HTTP 401/403 and auth-related error messages. If detected mid-bid, auto-refreshes cookies and retries instead of silently failing.
+- **Reusable `_refresh_auth()` method:** Single function for cookie reload → inject → re-validate, used both at startup and mid-bid.
+
+### Session Keepalive & JWT Management
+- **Session keepalive task:** Background loop pings HiBid every 20 minutes (only when active snipes exist). Launches the browser if needed — doesn't skip when snipes are sleeping.
+- **Cookie auto-save:** After each keepalive ping, captures all HiBid cookies from the browser context and writes them back to `data/hibid_cookies.json`. If HiBid issues a refreshed JWT on page visit, it's automatically captured — potentially extending the 7-day session indefinitely.
+- **JWT expiry decoding:** New `_decode_jwt_exp()` helper decodes the JWT payload's `exp` claim without a library. Used by both the keepalive (logging) and the cookie status API.
+- **JWT expiry banner in UI:** Amber warning when session expires in <24 hours, red danger at <4 hours, "EXPIRED" when dead. Checks every 60 seconds. Shows above the budget bar on all tabs.
+- **`/api/cookies/status` enhanced:** Now returns `jwt_expires_at` (Unix timestamp) and `jwt_expires_in_hours` (float) decoded from the actual JWT, not just cookie metadata.
+
+### Pre-registration at Queue Time
+- **Immediate registration on bookmarklet queue:** When a snipe is created via `POST /api/snipes/from-browser`, the bot immediately registers for that auction via GraphQL (`RegisterBuyer` mutation) using httpx — no Playwright needed.
+- Fire-and-forget (`asyncio.create_task`), non-blocking, non-fatal. If it fails (expired auth, network issue), the bot retries registration on wake via the existing `_ensure_registered()` path.
+- Uses existing functions from `hibid_api.py`: `get_auth_token()`, `_get_auction_id()`, `_register_for_auction()`.
+
+### HTTP-based Timer Cross-check
+- **New `get_lot_status_via_html()` in `hibid_api.py`:** Fetches the lot page HTML via httpx and extracts `timeLeftSeconds`, `currentBidAmount`, `bidCount`, and ended status from the Apollo SSR data. No Playwright, no frozen timer.
+- **30-second cross-check in poll loop:** During active monitoring, every 30 seconds the bot fetches the lot page via HTTP and compares `timeLeftSeconds` with the wall clock. If they disagree by >60 seconds, corrects `end_time`. Also detects ended state and price updates independently of the page DOM.
+- This catches wrong-lot `timeLeftSeconds` contamination that the initial double-read validation might miss, and provides a second independent timer source throughout the auction.
+
+### Previous (2026-03-31)
+
+### Bidding Reliability
+- Fixed a self-outbidding soft-close bug where HiBid could return `NO_BID` + `PreviousMaxBid` but the bot kept rebidding anyway.
+- Normalized `bidStatus` / `bidMessage` values from the GraphQL bid API before branching, so whitespace/casing variations still resolve correctly.
+- Added a committed-max guard so the bot holds when the visible current price is still at or below the max bid we already have on file.
+- Updated projected exposure math to replace the known committed max instead of loosely relying on the visible current price.
+
+### Tests / Ops
+- Added sniper regression tests covering `PreviousMaxBid` normalization and self-outbidding prevention.
+- Documented the Mar 31 live bidding failure and fix in `BOT_BID_PROBLEM.md`.
+- Rebuilt the Docker service to apply the live fix (`docker compose up -d --build`).
+
 ## [0.4.1] - 2026-02-27
 
 ### Safety Hardening (Bid Guardrails)
